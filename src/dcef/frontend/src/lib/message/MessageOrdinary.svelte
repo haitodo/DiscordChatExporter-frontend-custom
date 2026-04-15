@@ -12,10 +12,22 @@
     import MessageStickers from "./MessageStickers.svelte";
     import MessageTimestamp from "./MessageTimestamp.svelte";
     import { onMessageRightClick } from "./messageRightClick";
+    import { findThread, getGuildState } from "../../js/stores/guildState.svelte";
+    import Icon from "../icons/Icon.svelte";
 
     export let message: Message;
     export let messageState;
     const viewUserState = getViewUserState()
+    const guildState = getGuildState()
+
+    $: thread = findThread(message._id)
+
+    async function jumpToThread() {
+        if (thread) {
+            await guildState.changeThreadId(thread._id, null)
+            await guildState.pushState()
+        }
+    }
 
 </script>
 <MessageReferenced message={message} referencedMessage={message?.reference?.message} messageState={messageState} />
@@ -49,6 +61,19 @@
             {/if}
             <!-- {/if} -->
         </div>
+        {#if thread}
+            <div class="thread-indicator" on:click={jumpToThread}>
+                <div class="thread-icon"><Icon name="channeltype/thread" width={16} /></div>
+                <div class="thread-name" title="{thread.msg_count} messages">{thread.name}</div>
+                <div class="thread-msg-count">{thread.msg_count} messages</div>
+                <div class="thread-jump-btn">
+                    <span>See Thread</span>
+                    <div style="transform: rotate(90deg); display: grid; place-items: center;">
+                        <Icon name="modal/arrowUp" width={14} />
+                    </div>
+                </div>
+            </div>
+        {/if}
         {#if message.reactions}
             <MessageReactions reactions={message.reactions} />
         {/if}
@@ -72,6 +97,58 @@
         display:flex;
         flex-direction:column;
         gap:4px;
+    }
+
+    .thread-indicator {
+        margin-top: 8px;
+        margin-bottom: 4px;
+        background-color: #2b2d31;
+        border-radius: 4px;
+        padding: 8px 12px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+        width: fit-content;
+        max-width: 100%;
+        border: 1px solid rgba(0,0,0,0);
+
+        &:hover {
+            background-color: #35373c;
+            border: 1px solid #1e1f22;
+        }
+
+        .thread-icon {
+            color: #b5bac1;
+        }
+
+        .thread-name {
+            color: white;
+            font-weight: 600;
+            font-size: 14px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .thread-msg-count {
+            color: #b5bac1;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+
+        .thread-jump-btn {
+            margin-left: 8px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            color: #00a8fc;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        &:hover .thread-jump-btn {
+            color: #00b8ff;
+        }
     }
 
 </style>

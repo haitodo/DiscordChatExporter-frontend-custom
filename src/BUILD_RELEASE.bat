@@ -112,3 +112,5 @@ call mkdir "..\release\temp\"
 if not exist "..\release\exports" (
     mkdir "..\release\exports"
 )
+
+pause

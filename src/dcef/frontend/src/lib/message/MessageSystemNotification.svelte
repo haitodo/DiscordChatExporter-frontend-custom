@@ -1,6 +1,6 @@
 <script lang="ts">
     import type { Message } from "../../js/interfaces";
-    import { changeMessageId, getGuildState, isChannel } from "../../js/stores/guildState.svelte";
+    import { changeMessageId, findThread, getGuildState, isChannel } from "../../js/stores/guildState.svelte";
     import { getLayoutState } from "../../js/stores/layoutState.svelte";
     import { getViewUserState } from "../viewuser/viewUserState.svelte";
     import MessageAuthorName from "./MessageAuthorName.svelte";
@@ -16,6 +16,14 @@
 
     const viewUserState = getViewUserState()
     $: guildName = guildState.guilds.find(guild => guild._id === message.guildId)?.name ?? "this server"
+    $: thread = findThread(message._id)
+
+    async function jumpToThread() {
+        if (thread) {
+            await guildState.changeThreadId(thread._id, null)
+            await guildState.pushState()
+        }
+    }
 </script>
 
 <div class="system-message-row">
@@ -58,7 +66,11 @@
                         <span class="system-message-text">pinned a message to this channel. See all <span class="link" on:click={isChannel(message.reference.channelId) ? layoutState.toggleChannelPinned : layoutState.toggleThreadPinned}>pinned messages</span>.</span>
                     {/if}
                 {:else if message.type == "ThreadCreated"}
-                    <span class="system-message-text">started a thread.</span>
+                    {#if thread}
+                        <span class="system-message-text">started a thread: <span class="link" on:click={jumpToThread}>{thread.name}</span>.</span>
+                    {:else}
+                        <span class="system-message-text">started a thread.</span>
+                    {/if}
                 {:else if message.type == "GuildMemberJoin"}
                     <span class="system-message-text">joined the server.</span>
                     {:else if message.type == MessageType.GuildBoost} <!-- normal boost -->
