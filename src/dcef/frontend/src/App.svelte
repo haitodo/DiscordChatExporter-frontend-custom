@@ -12,7 +12,7 @@
     import ContextMenu from "./lib/components/menu/ContextMenu.svelte";
     import { onMount } from "svelte";
     import { position } from "./js/stores/menuStore";
-    import { font, hideSpoilers, theme } from './js/stores/settingsStore.svelte';
+    import { font, sidebarFontSize, mainThreadFontSize, replyThreadFontSize, hideSpoilers, theme } from './js/stores/settingsStore.svelte';
     import { getGuildState, isChannel } from './js/stores/guildState.svelte';
     import { getLayoutState } from './js/stores/layoutState.svelte';
     import ViewUser from './lib/viewuser/ViewUser.svelte';
@@ -30,11 +30,26 @@
       const unsubscribe3 = font.subscribe(value => {
         document.documentElement.setAttribute('data-font', value);
       });
+      
+      const unsubscribe4 = sidebarFontSize.subscribe(value => {
+        document.documentElement.style.setProperty('--sidebar-font-size', value + 'px');
+      });
+
+      const unsubscribe5 = mainThreadFontSize.subscribe(value => {
+        document.documentElement.style.setProperty('--main-thread-font-size', value + 'px');
+      });
+
+      const unsubscribe6 = replyThreadFontSize.subscribe(value => {
+        document.documentElement.style.setProperty('--reply-thread-font-size', value + 'px');
+      });
 
       return () => {
         unsubscribe1()
         unsubscribe2()
         unsubscribe3()
+        unsubscribe4()
+        unsubscribe5()
+        unsubscribe6()
       }
     })
 
@@ -111,6 +126,7 @@
   }
   .channels {
     grid-area: channels;
+    font-size: var(--sidebar-font-size);
   }
   .header-main {
     grid-area: header-main;
@@ -118,6 +134,7 @@
   .channel {
     grid-area: channel;
     overflow: hidden;
+    font-size: var(--main-thread-font-size);
   }
   .search-results {
     grid-area: search-results;
@@ -126,8 +143,7 @@
   }
   .thread {
     grid-area: thread;
-
-
+    font-size: var(--reply-thread-font-size);
   }
 
   /*Grid items have an initial size of min-width: auto and min-height: auto, prevent overflow*/

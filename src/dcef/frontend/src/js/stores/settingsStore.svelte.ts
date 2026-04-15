@@ -31,6 +31,9 @@ export const linkHandler = writable("app");
 export const channelScrollPosition = writable("bottom");
 export const hideSpoilers = writable(true);
 export const font = writable("ggsans");
+export const sidebarFontSize = writable(15);
+export const mainThreadFontSize = writable(16);
+export const replyThreadFontSize = writable(16);
 
 function withLocalStorage(store, localstorageKey: string, type = "string") {
     const restoredValue = localStorage.getItem(localstorageKey);
@@ -65,6 +68,9 @@ withLocalStorage(linkHandler, "linkHandler", "string");
 withLocalStorage(channelScrollPosition, "channelScrollPosition", "string");
 withLocalStorage(hideSpoilers, "hideSpoilers", "bool");
 withLocalStorage(font, "font", "string");
+withLocalStorage(sidebarFontSize, "sidebarFontSize", "int");
+withLocalStorage(mainThreadFontSize, "mainThreadFontSize", "int");
+withLocalStorage(replyThreadFontSize, "replyThreadFontSize", "int");
 withLocalStorage(currentUserId, "currentUserId", "string");
 withLocalStorage(currentUserName1, "currentUserName1", "string");
 withLocalStorage(currentUserName2, "currentUserName2", "string");

@@ -10,7 +10,7 @@
         padding: 13px 0 0 14px;
         height: 47px;
         font-weight: 600;
-        font-size: 16px;
+        font-size: inherit;
         top: 0;
         background-color: var(--panel-channels-bg);
         border-bottom: 1px solid #20222599;

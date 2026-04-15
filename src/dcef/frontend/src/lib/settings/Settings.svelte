@@ -1,5 +1,5 @@
 <script>
-    import { nameRenderer, startingDayOfTheWeek, developerMode, theme, online, gifs, linkHandler, channelScrollPosition, hideSpoilers, font, timestampFormat, dateFormat, timeFormat, locale} from '../../js/stores/settingsStore.svelte';
+    import { nameRenderer, startingDayOfTheWeek, developerMode, theme, online, gifs, linkHandler, channelScrollPosition, hideSpoilers, font, sidebarFontSize, mainThreadFontSize, replyThreadFontSize, timestampFormat, dateFormat, timeFormat, locale} from '../../js/stores/settingsStore.svelte';
     import { dateFormats, timeFormats, formatMoment, browserLocales } from '../../js/time';
     import RadioButton from './RadioButton.svelte';
     import RadioGroup from './RadioGroup.svelte';
@@ -312,6 +312,27 @@
                         bind:group={$font}
                     />
                 </RadioGroup>
+
+                <hr>
+
+                <div class="setting-item">
+                    <div class="setting-title">Sidebar Font Size: {$sidebarFontSize}px</div>
+                    <input type="range" min="12" max="24" step="1" bind:value={$sidebarFontSize} class="slider" />
+                </div>
+
+                <hr>
+
+                <div class="setting-item">
+                    <div class="setting-title">Main Thread Font Size: {$mainThreadFontSize}px</div>
+                    <input type="range" min="12" max="24" step="1" bind:value={$mainThreadFontSize} class="slider" />
+                </div>
+
+                <hr>
+
+                <div class="setting-item">
+                    <div class="setting-title">Reply Thread Font Size: {$replyThreadFontSize}px</div>
+                    <input type="range" min="12" max="24" step="1" bind:value={$replyThreadFontSize} class="slider" />
+                </div>
             {/if}
 
 
@@ -529,6 +550,46 @@
 
     .hamburger-btn {
         display: none;
+    }
+
+    .setting-item {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .setting-title {
+        font-weight: 600;
+        font-size: 16px;
+        color: #f2f3f5;
+    }
+
+    .slider {
+        -webkit-appearance: none;
+        width: 100%;
+        height: 8px;
+        background: #4e5058;
+        border-radius: 5px;
+        outline: none;
+        cursor: pointer;
+    }
+
+    .slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 20px;
+        height: 20px;
+        background: #5865f2;
+        border-radius: 50%;
+        cursor: pointer;
+    }
+
+    .slider::-moz-range-thumb {
+        width: 20px;
+        height: 20px;
+        background: #5865f2;
+        border-radius: 50%;
+        cursor: pointer;
     }
     @media (max-width: 1000px) {
         .hamburger-btn {

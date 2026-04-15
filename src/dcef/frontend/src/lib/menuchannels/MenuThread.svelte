@@ -129,7 +129,7 @@
         color: #949BA4;
         line-height: 20px;
         font-weight: 500;
-        font-size: 16px;
+        font-size: inherit;
         height: 20px;
         overflow: hidden;
     }
