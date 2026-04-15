@@ -34,6 +34,7 @@ export const font = writable("ggsans");
 export const sidebarFontSize = writable(15);
 export const mainThreadFontSize = writable(16);
 export const replyThreadFontSize = writable(16);
+export const jumpToMessageAnimated = writable(false);
 
 function withLocalStorage(store, localstorageKey: string, type = "string") {
     const restoredValue = localStorage.getItem(localstorageKey);
@@ -71,6 +72,7 @@ withLocalStorage(font, "font", "string");
 withLocalStorage(sidebarFontSize, "sidebarFontSize", "int");
 withLocalStorage(mainThreadFontSize, "mainThreadFontSize", "int");
 withLocalStorage(replyThreadFontSize, "replyThreadFontSize", "int");
+withLocalStorage(jumpToMessageAnimated, "jumpToMessageAnimated", "bool");
 withLocalStorage(currentUserId, "currentUserId", "string");
 withLocalStorage(currentUserName1, "currentUserName1", "string");
 withLocalStorage(currentUserName2, "currentUserName2", "string");

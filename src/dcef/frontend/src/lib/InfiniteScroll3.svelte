@@ -1,6 +1,7 @@
 <script lang="ts">
     import { onMount, tick, type Snippet } from "svelte";
     import {throttle, debounce} from 'lodash-es';
+    import { jumpToMessageAnimated } from "../js/stores/settingsStore.svelte";
 
     interface MyProps {
         fetchMessages: (direction: "before" | "after" | "around" , messageId: string, limit: number) => Promise<string[]>
@@ -106,7 +107,16 @@
         }
         const messageElement = scrollContainer.querySelector(`[data-messageid="${messageId}"]`)
         if (messageElement) {
-            messageElement.scrollIntoView({ behavior: "smooth", block: "center" })
+            const containerRect = scrollContainer.getBoundingClientRect();
+            const elementRect = messageElement.getBoundingClientRect();
+            
+            const offset = elementRect.top - containerRect.top + scrollContainer.scrollTop;
+            const targetScrollTop = offset - scrollContainer.clientHeight / 2 + elementRect.height / 2;
+
+            scrollContainer.scrollTo({
+                top: targetScrollTop,
+                behavior: $jumpToMessageAnimated ? "smooth" : "auto"
+            });
         }
     }
 

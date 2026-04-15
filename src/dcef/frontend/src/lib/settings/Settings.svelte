@@ -1,5 +1,5 @@
 <script>
-    import { nameRenderer, startingDayOfTheWeek, developerMode, theme, online, gifs, linkHandler, channelScrollPosition, hideSpoilers, font, sidebarFontSize, mainThreadFontSize, replyThreadFontSize, timestampFormat, dateFormat, timeFormat, locale} from '../../js/stores/settingsStore.svelte';
+    import { nameRenderer, startingDayOfTheWeek, developerMode, theme, online, gifs, linkHandler, channelScrollPosition, hideSpoilers, font, sidebarFontSize, mainThreadFontSize, replyThreadFontSize, timestampFormat, dateFormat, timeFormat, locale, jumpToMessageAnimated} from '../../js/stores/settingsStore.svelte';
     import { dateFormats, timeFormats, formatMoment, browserLocales } from '../../js/time';
     import RadioButton from './RadioButton.svelte';
     import RadioGroup from './RadioGroup.svelte';
@@ -166,6 +166,27 @@
                         name={"channelScrollPosition"}
                         value={"top"}
                         bind:group={$channelScrollPosition}
+                    />
+                </RadioGroup>
+
+                <hr>
+
+                <RadioGroup
+                    title={"Jump to message animation"}
+                    description={"Animate scrolling when clicking a reply or channel reference"}
+                >
+                    <RadioButton
+                        title={"Instant (Default)"}
+                        name={"jumpToMessageAnimated"}
+                        value={false}
+                        bind:group={$jumpToMessageAnimated}
+                    />
+
+                    <RadioButton
+                        title={"Animated"}
+                        name={"jumpToMessageAnimated"}
+                        value={true}
+                        bind:group={$jumpToMessageAnimated}
                     />
                 </RadioGroup>
 
