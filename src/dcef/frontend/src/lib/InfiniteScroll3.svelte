@@ -99,8 +99,12 @@
         if (!scrollContainer) {
             return
         }
-        if (messageId === "last") {
+        if (messageId === "last" || messageId === "bottom") {
             scrollContainer.scrollTop = scrollContainer.scrollHeight
+            return
+        }
+        if (messageId === "first" || messageId === "top") {
+            scrollContainer.scrollTop = 0
             return
         }
         const messageElement = scrollContainer.querySelector(`[data-messageid="${messageId}"]`)

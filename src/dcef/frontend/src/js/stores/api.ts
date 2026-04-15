@@ -13,10 +13,10 @@ export async function fetchMessages(guildId: string | null, channelId: string, d
     if (guildId === null) {
         guildId = "000000000000000000000000"
     }
-    if (messageId === null || messageId === "first") {
+    if (messageId === null || messageId === "first" || messageId === "top") {
         messageId = "000000000000000000000000"
     }
-    else if (messageId === "last") {
+    else if (messageId === "last" || messageId === "bottom") {
         messageId = "999999999999999999999999"
     }
     try {
@@ -55,10 +55,10 @@ export async function fetchSearch(guildId: string | null, prompt: string, direct
     if (guildId === null) {
         guildId = "000000000000000000000000"
     }
-    if (messageId === null || messageId === "first") {
+    if (messageId === null || messageId === "first" || messageId === "top") {
         messageId = "000000000000000000000000"
     }
-    else if (messageId === "last") {
+    else if (messageId === "last" || messageId === "bottom") {
         messageId = "999999999999999999999999"
     }
     try {

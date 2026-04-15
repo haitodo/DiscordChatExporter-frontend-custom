@@ -62,6 +62,16 @@
             {/if}
         </div>
         <div class="pin-wrapper">
+            <div class="jump-buttons">
+                <div class="jump-btn" title="Jump to top" onclick={() => guildState.changeThreadId(guildState.threadId, "first")}>
+                    <Icon name="modal/arrowUp" width={24} />
+                </div>
+                <div class="jump-btn" title="Jump to bottom" onclick={() => guildState.changeThreadId(guildState.threadId, "last")}>
+                    <div style="transform: rotate(180deg); display: grid; place-items: center;">
+                        <Icon name="modal/arrowUp" width={24} />
+                    </div>
+                </div>
+            </div>
             <div class="pin-btn" class:active={layoutState.threadpinnedshown} onclick={layoutState.toggleThreadPinned}>
                 <Icon name="systemmessage/pinned" width={24} />
             </div>
@@ -107,6 +117,21 @@
 
     .pin-wrapper {
         position: relative;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+
+        .jump-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        .jump-btn {
+            cursor: pointer;
+            color: #b5bac1;
+            &:hover {
+                color: #dbdee1;
+            }
+        }
         .pin-btn {
             cursor: pointer;
             color: #b5bac1;

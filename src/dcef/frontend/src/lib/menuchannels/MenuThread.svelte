@@ -3,7 +3,7 @@
     import type { Channel } from "../../js/interfaces";
     import { getGuildState } from "../../js/stores/guildState.svelte";
     import { contextMenuItems } from "../../js/stores/menuStore";
-    import { linkHandler } from "../../js/stores/settingsStore.svelte";
+    import { linkHandler, channelScrollPosition } from "../../js/stores/settingsStore.svelte";
     import { getLayoutState } from "../../js/stores/layoutState.svelte";
 
 
@@ -39,11 +39,11 @@
         await guildState.changeGuildId(guildId)
         let changed = false
         if (guildState.channelId !== channelId) {
-            await guildState.changeChannelId(channelId, "last")
+            await guildState.changeChannelId(channelId, $channelScrollPosition)
             changed = true
         }
         if (guildState.threadId !== threadId) {
-            await guildState.changeThreadId(threadId, "last")
+            await guildState.changeThreadId(threadId, $channelScrollPosition)
             changed = true
         }
         if (changed) {

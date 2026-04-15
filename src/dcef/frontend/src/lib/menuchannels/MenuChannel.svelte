@@ -4,7 +4,7 @@
     import { contextMenuItems } from "../../js/stores/menuStore";
     import type { Channel } from "../../js/interfaces";
     import { getGuildState } from "../../js/stores/guildState.svelte";
-    import { linkHandler } from "../../js/stores/settingsStore.svelte";
+    import { linkHandler, channelScrollPosition } from "../../js/stores/settingsStore.svelte";
     import ChannelIcon from "./ChannelIcon.svelte";
     import { getLayoutState } from "../../js/stores/layoutState.svelte";
 
@@ -23,7 +23,7 @@
         isOpen = !isOpen
         if (isOpen) {
             if (guildState.channelId !== channel._id) {
-                await guildState.changeChannelId(channel._id, "last")
+                await guildState.changeChannelId(channel._id, $channelScrollPosition)
                 if (layoutState.mobile) {
                     layoutState.hideSidePanel()
                 }

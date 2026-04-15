@@ -44,6 +44,14 @@
         </div>
         <div class="other-wrapper">
             {#if guildState.channelId}
+                <div class="icon" title="Jump to top" onclick={() => guildState.changeChannelId(guildState.channelId, "first")}>
+                    <Icon name="modal/arrowUp" width={24} />
+                </div>
+                <div class="icon" title="Jump to bottom" onclick={() => guildState.changeChannelId(guildState.channelId, "last")}>
+                    <div style="transform: rotate(180deg); display: grid; place-items: center;">
+                        <Icon name="modal/arrowUp" width={24} />
+                    </div>
+                </div>
                 <div class="pin-wrapper">
                     <div class="pin-btn icon" class:active={layoutState.channelpinnedshown} onclick={layoutState.toggleChannelPinned}>
                         <Icon name="systemmessage/pinned" width={24} />
