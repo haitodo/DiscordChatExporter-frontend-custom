@@ -616,24 +616,30 @@
 
 <style>
     .autocomplete::-webkit-scrollbar-track {
+        background-color: transparent;
+    }
+    .autocomplete:hover::-webkit-scrollbar-track {
         background-color: #111214;
     }
     .autocomplete::-webkit-scrollbar-corner {
+        background-color: transparent;
+    }
+    .autocomplete:hover::-webkit-scrollbar-corner {
         background-color: #111214;
     }
     .autocomplete::-webkit-resizer {
+        background-color: transparent;
+    }
+    .autocomplete:hover::-webkit-resizer {
         background-color: #111214;
     }
     .autocomplete::-webkit-scrollbar {
-        width: 0px;
-        height: 3px;
-    }
-    .autocomplete:hover::-webkit-scrollbar {
         width: 11px;
+        height: 3px;
     }
     .autocomplete::-webkit-scrollbar-thumb {
         height: 50px;
-        background-color: #2c2c2c;
+        background-color: transparent;
         border-radius: 3px;
 
         width: 5px;
@@ -642,6 +648,9 @@
         /*left+right scrollbar padding magix*/
         background-clip: padding-box;
         border: 3px solid #111214;
+    }
+    .autocomplete:hover::-webkit-scrollbar-thumb {
+        background-color: #2c2c2c;
     }
 
     .autocomplete {
