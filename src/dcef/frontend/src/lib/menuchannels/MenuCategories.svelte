@@ -39,18 +39,13 @@
         font-weight: 600;
     }
     .categories-wrapper {
-        overflow-y: scroll;
+        overflow-y: overlay; /* スクロールバーをコンテンツ上にオーバーレイ表示（Chromium系で有効） */
         height: 100%;
         box-sizing: border-box;
-        margin-right: 11px;
-    }
-
-    .categories-wrapper {
-        margin-right: 0;
     }
 
     .categories-wrapper::-webkit-scrollbar-track {
-        background-color: transparent;
+        background-color: #202225;
     }
     .categories-wrapper:hover::-webkit-scrollbar-track {
         background-color: #2b2d31;
