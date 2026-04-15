@@ -47,6 +47,7 @@
 <div class="spoiler-wrapper {divclass}" onclick={clickable ? viewGallery : undefined} class:clickable={clickable}>
 	<img
 		class:media-spoiler={isBlurred}
+		loading="lazy"
 		src={checkUrl(asset)}
 		width="{asset?.width ?? undefined}"
 		height="{asset?.height ?? undefined}"

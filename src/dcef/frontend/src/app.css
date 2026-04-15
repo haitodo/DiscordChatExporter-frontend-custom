@@ -27,36 +27,42 @@
 	src: url(/fonts/whitney-300.woff);
 	font-family: Whitney;
 	font-weight: 300;
+	font-display: swap;
 }
 
 @font-face {
 	src: url(/fonts/whitney-400.woff);
 	font-family: Whitney;
 	font-weight: 400;
+	font-display: swap;
 }
 
 @font-face {
 	src: url(/fonts/whitney-500.woff);
 	font-family: Whitney;
 	font-weight: 500;
+	font-display: swap;
 }
 
 @font-face {
 	src: url(/fonts/whitney-600.woff);
 	font-family: Whitney;
 	font-weight: 600;
+	font-display: swap;
 }
 
 @font-face {
 	src: url(/fonts/whitney-700.woff);
 	font-family: Whitney;
 	font-weight: 700;
+	font-display: swap;
 }
 
 @font-face {
 	font-family: "gg sans";
 	font-style: normal;
 	font-weight: 400;
+	font-display: swap;
 	src: url(/fonts/ggsans-normal-400.woff2) format("woff2");
 }
 
@@ -64,6 +70,7 @@
 	font-family: "gg sans";
 	font-style: italic;
 	font-weight: 400;
+	font-display: swap;
 	src: url(/fonts/ggsans-italic-400.woff2) format("woff2");
 }
 
@@ -71,6 +78,7 @@
 	font-family: "gg sans";
 	font-style: normal;
 	font-weight: 500;
+	font-display: swap;
 	src: url(/fonts/ggsans-normal-500.woff2) format("woff2");
 }
 
@@ -78,6 +86,7 @@
 	font-family: "gg sans";
 	font-style: italic;
 	font-weight: 500;
+	font-display: swap;
 	src: url(/fonts/ggsans-italic-500.woff2) format("woff2");
 }
 
@@ -85,6 +94,7 @@
 	font-family: "gg sans";
 	font-style: normal;
 	font-weight: 600;
+	font-display: swap;
 	src: url(/fonts/ggsans-normal-600.woff2) format("woff2");
 }
 
@@ -92,6 +102,7 @@
 	font-family: "gg sans";
 	font-style: italic;
 	font-weight: 600;
+	font-display: swap;
 	src: url(/fonts/ggsans-italic-600.woff2) format("woff2");
 }
 
@@ -99,6 +110,7 @@
 	font-family: "gg sans";
 	font-style: normal;
 	font-weight: 700;
+	font-display: swap;
 	src: url(/fonts/ggsans-normal-700.woff2) format("woff2");
 }
 
@@ -106,6 +118,7 @@
 	font-family: "gg sans";
 	font-style: italic;
 	font-weight: 700;
+	font-display: swap;
 	src: url(/fonts/ggsans-italic-700.woff2) format("woff2");
 }
 
@@ -113,6 +126,7 @@
 	font-family: "gg sans";
 	font-style: normal;
 	font-weight: 800;
+	font-display: swap;
 	src: url(/fonts/ggsans-normal-800.woff2) format("woff2");
 }
 
@@ -120,6 +134,7 @@
 	font-family: "gg sans";
 	font-style: italic;
 	font-weight: 800;
+	font-display: swap;
 	src: url(/fonts/ggsans-italic-800.woff2) format("woff2");
 }
 

@@ -117,7 +117,7 @@
                     {#if embed.author}
                         <div class="author-name">
                             {#if embed.author.icon && !authorIconFailedToLoad}
-                                <img class="author-icon" src={checkUrl(embed.author.icon)} alt="" width="24" height="24" onerror={onAuthorIconError} />
+                                <img class="author-icon" src={checkUrl(embed.author.icon)} alt="" loading="lazy" width="24" height="24" onerror={onAuthorIconError} />
                             {/if}
                             <a href={embed.author.url} target="_blank" rel="noopener noreferrer">{embed.author.name}</a>
                         </div>
@@ -209,7 +209,7 @@
                 <div class="footer">
                     <div class="footer-row">
                         {#if embed.footer.icon && !footerIconFailedToLoad}
-                            <img class="footer-icon" src={checkUrl(embed.footer.icon)} alt="" width="20" height="20" onerror={onFooterIconError} />
+                            <img class="footer-icon" src={checkUrl(embed.footer.icon)} alt="" loading="lazy" width="20" height="20" onerror={onFooterIconError} />
                         {/if}
                         <span class="footer-text">{embed.footer?.text}</span><span class="footer-separator">•</span><span class="footer-timestamp">{renderTimestamp(embed.timestamp)}</span>
                     </div>
