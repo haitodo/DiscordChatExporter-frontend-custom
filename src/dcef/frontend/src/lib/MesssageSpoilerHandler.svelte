@@ -3,7 +3,6 @@
 	let mainContainer: HTMLElement;
 
 	function removeSpoiler(e: MouseEvent) {
-		console.log(e.target);
 		// handle spoilers globally in containers
 		if (e.target && e.target.matches(".d-spoiler")) {
 			e.target.classList.remove("d-spoiler");
@@ -16,7 +15,6 @@
 	}
 
 	onMount(() => {
-		console.log();
 		mainContainer.addEventListener("click", removeSpoiler);
 	})
 

@@ -29,7 +29,6 @@
     async function handleScroll(event: Event) {
 
         if (loadIsThrottled) {
-            console.log('loadf throttled')
             debouncedHandleScroll(event)
             event.preventDefault()
             return
@@ -40,7 +39,6 @@
         }
         // if at the top of scroll container, load more messages before
         if (prevPage && scrollContainer.scrollTop === 0) {
-            console.log('top reached')
             loadIsThrottled = true
             scrollDisabled = true
             const bottomOffset = scrollContainer.scrollHeight - scrollContainer.clientHeight
@@ -70,7 +68,6 @@
         }
         // if at the bottom of scroll container, load more messages after
         if (nextPage && scrollContainer.scrollTop + scrollContainer.clientHeight >= scrollContainer.scrollHeight - 1) {
-            console.log('bottom reached')
             loadIsThrottled = true
             scrollDisabled = true
             const moreMessagesObj = await fetchMessages("after", nextPage, MSGCOUNT_MORE)

@@ -8,7 +8,6 @@
     import Icon from "./icons/Icon.svelte";
 
 	function onRightClick(e, id) {
-        console.log("right click", id);
 		$contextMenuItems = [
 			{
 				"name": `Open guild in discord ${$linkHandler === 'app' ? "app" : "web"}`,

@@ -138,7 +138,6 @@ export async function fetchGuilds() {
     try {
         const response = await fetch('/api/guilds')
         const guilds = await response.json()
-        console.log("guilds", guilds);
         return guilds
         // guilds.set(response_json)
     }
@@ -153,7 +152,6 @@ export async function fetchCategoriesChannelsThreads(guildId: string): Promise<C
     if (guildId === null) {
         guildId = "000000000000000000000000"
     }
-    console.log("aaaaaa fetchCategoriesChannelsThreads", guildId);
     try {
         const response = await fetch(`/api/guild/channels?guild_id=${guildId}`)
         let json_response: Channel[] = await response.json()
@@ -249,7 +247,6 @@ export async function fetchCategoriesChannelsThreads(guildId: string): Promise<C
             })
         }
 
-        console.log("categories", categories_temp);
         categories_temp = categories_temp.sort((a, b) => b.msg_count - a.msg_count)
         categories_temp.forEach((category) => {
             category.channels = category.channels.sort((a, b) => b.msg_count - a.msg_count)

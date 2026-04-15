@@ -79,17 +79,14 @@
     }
 
     function onAuthorIconError(e: Event) {
-        console.log('author icon error', e)
         authorIconFailedToLoad = true
     }
 
     function onThumbnailError(e: Event) {
-        console.log('thumbnail error', e)
         thumbnailFailedToLoad = true
     }
 
     function onFooterIconError(e: Event) {
-        console.log('footer icon error', e)
         footerIconFailedToLoad = true
     }
 </script>

@@ -3,7 +3,35 @@
 import SimpleMarkdown from 'simple-markdown';
 import { renderTimestamp } from './time';
 import { checkUrl } from './helpers';
-import hljs from 'highlight.js';
+import hljs from 'highlight.js/lib/core';
+import javascript from 'highlight.js/lib/languages/javascript';
+import python from 'highlight.js/lib/languages/python';
+import typescript from 'highlight.js/lib/languages/typescript';
+import css from 'highlight.js/lib/languages/css';
+import html from 'highlight.js/lib/languages/xml';
+import json from 'highlight.js/lib/languages/json';
+import bash from 'highlight.js/lib/languages/bash';
+import cpp from 'highlight.js/lib/languages/cpp';
+import java from 'highlight.js/lib/languages/java';
+import csharp from 'highlight.js/lib/languages/csharp';
+import sql from 'highlight.js/lib/languages/sql';
+import rust from 'highlight.js/lib/languages/rust';
+import go from 'highlight.js/lib/languages/go';
+
+hljs.registerLanguage('javascript', javascript);
+hljs.registerLanguage('python', python);
+hljs.registerLanguage('typescript', typescript);
+hljs.registerLanguage('css', css);
+hljs.registerLanguage('html', html);
+hljs.registerLanguage('json', json);
+hljs.registerLanguage('bash', bash);
+hljs.registerLanguage('cpp', cpp);
+hljs.registerLanguage('java', java);
+hljs.registerLanguage('csharp', csharp);
+hljs.registerLanguage('sql', sql);
+hljs.registerLanguage('rust', rust);
+hljs.registerLanguage('go', go);
+
 import { twemojiToFilename } from './emojis/twemojiToFilename';
 import type { Asset } from './interfaces';
 
@@ -318,7 +346,6 @@ const oldEmoji = {
     }
     let emojiName = capture[1]
     for (const emote of state.emotes) {
-        console.log("emote", emote)
         if (emote.name == emojiName) {
             const newUrl = checkUrl(emote.image)
             if (newUrl !== "") {

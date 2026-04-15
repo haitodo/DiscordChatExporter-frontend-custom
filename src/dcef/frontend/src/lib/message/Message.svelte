@@ -65,7 +65,6 @@
             }
             // null checks
             if (!previousMessage) {
-                console.log("should merge - NO PREVIOUS MESSAGE")
                 return false;
             }
             if (!message) {

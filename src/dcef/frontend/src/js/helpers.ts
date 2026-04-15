@@ -8,7 +8,6 @@ export function checkUrl(asset) {
     if (!url)
         return "";
     if (url.startsWith('https') || url.startsWith('http')) {
-        console.warn('online url', url);
         return url;
     }
     return "/input/" + encodeURI(url)
