@@ -34,9 +34,9 @@
 {#snippet renderMessageSnippet2(message, previousMessage)}
     <div data-messageid={message._id}>
         {#if message._id === "first"}
-            <div>thread start</div>
+            <div class="channel-boundary">thread start</div>
         {:else if message._id === "last"}
-            <div>thread end</div>
+            <div class="channel-boundary">thread end</div>
         {:else}
             {#if isDateDifferent(previousMessage, message)}
                 <DateSeparator messageId={message._id} />
@@ -128,15 +128,23 @@
         .jump-btn {
             cursor: pointer;
             color: #b5bac1;
+            padding: 4px;
+            border-radius: 4px;
+            transition: background-color 0.15s ease, color 0.15s ease;
             &:hover {
                 color: #dbdee1;
+                background-color: rgba(79, 84, 92, 0.32);
             }
         }
         .pin-btn {
             cursor: pointer;
             color: #b5bac1;
+            padding: 4px;
+            border-radius: 4px;
+            transition: background-color 0.15s ease, color 0.15s ease;
             &:hover {
                 color: #dbdee1;
+                background-color: rgba(79, 84, 92, 0.32);
             }
             &.active {
                 color: white;
@@ -185,37 +193,19 @@
         flex-grow: 3;
     }
 
+    .channel-boundary {
+        text-align: center;
+        color: #80848e;
+        padding: 20px 0;
+        font-size: 14px;
+        font-weight: 500;
+        user-select: none;
+    }
+
     .thread {
         overflow-y: auto;
         height: 100%;
     }
 
-    .thread::-webkit-scrollbar-track {
-        background-color: #2b2d31;
-    }
-    .thread::-webkit-scrollbar-corner {
-        background-color: #646464;
-    }
 
-    .thread::-webkit-resizer {
-        background-color: #666;
-    }
-    .thread::-webkit-scrollbar-track-piece {
-        background-color:#313338;
-    }
-    .thread::-webkit-scrollbar {
-        height: 3px;
-        width: 14px;
-    }
-    .thread::-webkit-scrollbar-thumb {
-        height: 50px;
-        background-color: #1a1b1e;
-
-        width: 5px;
-        border-radius: 10px;
-
-        /*left+right scrollbar padding magix*/
-        background-clip: padding-box;
-        border: 3px solid rgba(0, 0, 0, 0);
-    }
 </style>

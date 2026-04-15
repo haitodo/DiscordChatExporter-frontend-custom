@@ -118,8 +118,6 @@
         color: #b5b6b8;
         font-size: 0.875rem;
         white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
 
         .click-attachment {
             display:flex;

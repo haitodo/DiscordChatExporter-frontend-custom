@@ -428,7 +428,6 @@
 
     .tab {
         width: 200px;
-        border-radius: 5px;
         cursor: pointer;
 
         padding-top: 6px;

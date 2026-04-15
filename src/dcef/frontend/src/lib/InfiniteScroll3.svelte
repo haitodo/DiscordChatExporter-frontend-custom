@@ -181,32 +181,5 @@
         overflow-y: auto;
     }
 
-    .scroll-container::-webkit-scrollbar-track {
-        background-color: #2b2d31;
-    }
-    .scroll-container::-webkit-scrollbar-corner {
-        background-color: #646464;
-    }
 
-    .scroll-container::-webkit-resizer {
-        background-color: #666;
-    }
-    .scroll-container::-webkit-scrollbar-track-piece {
-        background-color:#313338;
-    }
-    .scroll-container::-webkit-scrollbar {
-    height: 3px;
-        width: 14px;
-    }
-    .scroll-container::-webkit-scrollbar-thumb {
-        height: 50px;
-        background-color: #1a1b1e;
-
-        width: 5px;
-        border-radius: 10px;
-
-        /*left+right scrollbar padding magix*/
-        background-clip: padding-box;
-        border: 3px solid rgba(0, 0, 0, 0);
-    }
 </style>

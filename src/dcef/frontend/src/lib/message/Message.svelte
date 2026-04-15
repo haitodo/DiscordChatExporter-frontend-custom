@@ -45,15 +45,12 @@
         }
 
         function inviteIds(messageContent: string): string[] {
-            const inviteRegex = /(https?:\/\/)?(www\.)?((discordapp\.com\/invite)|(discord\.gg))\/(\w+)/
-            let ids = []
-            let match = messageContent.match(inviteRegex)
-            while (match) {
-                ids.push(match[6])
-                messageContent = messageContent.replace(match[0], "")
-                match = messageContent.match(inviteRegex)
+            const inviteRegex = /(https?:\/\/)?(www\.)?((discordapp\.com\/invite)|(discord\.gg))\/(\w+)/g;
+            let ids = [];
+            for (const match of messageContent.matchAll(inviteRegex)) {
+                ids.push(match[6]);
             }
-            return ids
+            return ids;
         }
 
         /**
@@ -192,6 +189,11 @@
         margin-top: 5px;
         padding: 0 20px;
         position: relative;
+        transition: background-color 0.1s ease;
+
+        &:hover {
+            background-color: rgba(4, 4, 5, 0.07);
+        }
 
         &.notgrouped {
             margin-top: 17px;

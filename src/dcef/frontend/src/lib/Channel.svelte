@@ -25,7 +25,7 @@
 {/snippet}
 
 {#snippet channelEndSnippet(index, message, previousMessage)}
-    <div data-messageid="last">
+    <div data-messageid="last" class="channel-boundary">
         this is the end of the channel
     </div>
 {/snippet}
@@ -33,9 +33,9 @@
 {#snippet renderMessageSnippet2(message, previousMessage)}
     <div data-messageid={message._id}>
         {#if message._id === "first"}
-            <div>channel start</div>
+            <div class="channel-boundary">channel start</div>
         {:else if message._id === "last"}
-            <div>channel end</div>
+            <div class="channel-boundary">channel end</div>
         {:else}
             {#if isDateDifferent(previousMessage, message)}
                 <DateSeparator messageId={message._id} />
@@ -68,6 +68,15 @@
     .channel-wrapper {
         height: 100%;
         overflow: hidden;
+    }
+
+    .channel-boundary {
+        text-align: center;
+        color: #80848e;
+        padding: 20px 0;
+        font-size: 14px;
+        font-weight: 500;
+        user-select: none;
     }
 
     .threadshown {

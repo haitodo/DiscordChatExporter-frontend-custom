@@ -98,7 +98,6 @@
     .searchbar {
         height: 100%;
         display: flex;
-        gap: 8px;
         flex-direction: row;
         align-items: center;
         padding: 0 15px;
@@ -119,8 +118,12 @@
     .icon {
         color: #b5bac1;
         cursor: pointer;
+        padding: 4px;
+        border-radius: 4px;
+        transition: background-color 0.15s ease, color 0.15s ease;
         &:hover {
             color: #dbdee1;
+            background-color: rgba(79, 84, 92, 0.32);
         }
         &.active {
             color: white;

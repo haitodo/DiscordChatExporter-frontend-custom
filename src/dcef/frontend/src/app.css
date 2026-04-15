@@ -1,10 +1,7 @@
 :root {
   color: white;
   background-color: #242424;
-}
-
-:root {
-	font-family: Whitney, "gg sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: Whitney, "gg sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 :root[data-font="ggsans"] {
@@ -164,4 +161,33 @@ button,
 input {
 	all: unset;
 	outline: revert; /* add back outline for keyboard navigation */
+}
+
+::-webkit-scrollbar-track {
+    background-color: #2b2d31;
+}
+::-webkit-scrollbar-corner {
+    background-color: #646464;
+}
+
+::-webkit-resizer {
+    background-color: #666;
+}
+::-webkit-scrollbar-track-piece {
+    background-color:#313338;
+}
+::-webkit-scrollbar {
+    height: 3px;
+    width: 14px;
+}
+::-webkit-scrollbar-thumb {
+    height: 50px;
+    background-color: #1a1b1e;
+
+    width: 5px;
+    border-radius: 10px;
+
+    /*left+right scrollbar padding magix*/
+    background-clip: padding-box;
+    border: 3px solid rgba(0, 0, 0, 0);
 }
