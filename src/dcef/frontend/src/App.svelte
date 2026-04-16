@@ -79,7 +79,7 @@
 </script>
 
 <svelte:head>
-    <title>DCE-Frontend</title>
+    <title>DiscordChatExporter-frontend</title>
     <meta name="description" content="View your JSON DiscordChatExporter exports as if you were using Discord interface"/>
 </svelte:head>
 

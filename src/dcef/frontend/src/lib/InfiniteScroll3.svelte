@@ -1,7 +1,8 @@
 <script lang="ts">
-    import { onMount, tick, type Snippet } from "svelte";
+    import { onMount, onDestroy, tick, type Snippet } from "svelte";
     import {throttle, debounce} from 'lodash-es';
     import { jumpToMessageAnimated } from "../js/stores/settingsStore.svelte";
+    import { saveScrollMessageId } from "../js/stores/sessionStore";
 
     interface MyProps {
         fetchMessages: (direction: "before" | "after" | "around" , messageId: string, limit: number) => Promise<string[]>
@@ -9,9 +10,10 @@
         scrollToMessageId: string
         emptySnippet?: Snippet
         channelStartSnippet?: Snippet
+        channelOrThreadId?: string | null
     }
 
-    let { fetchMessages, snippetMessage, scrollToMessageId, emptySnippet, channelStartSnippet}: MyProps = $props();
+    let { fetchMessages, snippetMessage, scrollToMessageId, emptySnippet, channelStartSnippet, channelOrThreadId = null}: MyProps = $props();
 
     let SHOWDEBUG = false
     let scrollContainer: HTMLDivElement
@@ -27,6 +29,43 @@
 
 
     let preMessagesMapping = new Map<string, any>()  // id (current) -> message (previous)
+
+    /**
+     * ビューポート中央付近のメッセージIDを特定してlocalStorageに保存
+     */
+    function saveCurrentScrollPosition() {
+        if (!channelOrThreadId || !scrollContainer || messages.length === 0) {
+            return;
+        }
+        const containerRect = scrollContainer.getBoundingClientRect();
+        const centerY = containerRect.top + containerRect.height / 2;
+
+        // ビューポート中央に最も近いメッセージを探す
+        const messageElements = scrollContainer.querySelectorAll('[data-messageid]');
+        let closestId: string | null = null;
+        let closestDistance = Infinity;
+
+        for (const el of messageElements) {
+            const msgId = (el as HTMLElement).dataset.messageid;
+            if (!msgId || msgId === 'first' || msgId === 'last') continue;
+
+            const rect = el.getBoundingClientRect();
+            const msgCenterY = rect.top + rect.height / 2;
+            const distance = Math.abs(msgCenterY - centerY);
+
+            if (distance < closestDistance) {
+                closestDistance = distance;
+                closestId = msgId;
+            }
+        }
+
+        if (closestId) {
+            saveScrollMessageId(channelOrThreadId, closestId);
+        }
+    }
+    // スクロール位置の保存は500msにthrottle
+    const throttledSaveScrollPosition = throttle(saveCurrentScrollPosition, 500, { leading: false, trailing: true });
+
     async function handleScroll(event: Event) {
 
         if (loadIsThrottled) {
@@ -89,11 +128,14 @@
             scrollDisabled = false
             loadIsThrottled = false
         }
+
+        // スクロール位置を保存
+        throttledSaveScrollPosition();
     }
     // debounce handleScroll
     const debouncedHandleScroll = debounce(handleScroll, 250)
 
-    function scrollToMessageIdF(messageId: string) {
+    function scrollToMessageIdF(messageId: string, instant: boolean = false) {
         if (!scrollContainer) {
             return
         }
@@ -115,10 +157,12 @@
 
             scrollContainer.scrollTo({
                 top: targetScrollTop,
-                behavior: $jumpToMessageAnimated ? "smooth" : "auto"
+                behavior: instant ? "auto" : ($jumpToMessageAnimated ? "smooth" : "auto")
             });
         }
     }
+
+    let initialCenteringInterval: ReturnType<typeof setInterval> | null = null;
 
     onMount(async () => {
         const newMessages = await fetchMessages("around", scrollToMessageId, MSGCOUNT_INITIAL)
@@ -133,16 +177,43 @@
         prevPage = newMessages.prevPage
         nextPage = newMessages.nextPage
         await tick();  // wait for render
-        scrollToMessageIdF(scrollToMessageId)
+        
+        // アプリ起動直後は画像の遅延読み込みなどでDOMの高さが変わりやすいため、
+        // scrollDisabled が解除されるまでの間は定期的にスクロール位置を補正し続ける
+        initialCenteringInterval = setInterval(() => {
+            if (scrollDisabled && scrollToMessageId) {
+                scrollToMessageIdF(scrollToMessageId, true);
+            }
+        }, 50);
+
         setTimeout(() => {
-            scrollToMessageIdF(scrollToMessageId)
-        }, 200)
-        setTimeout(() => {
-            scrollToMessageIdF(scrollToMessageId)
+            if (initialCenteringInterval) {
+                clearInterval(initialCenteringInterval);
+                initialCenteringInterval = null;
+            }
             scrollDisabled = false
-        }, 500)
+        }, 1500)
         isLoading = false
     })
+
+    // コンポーネント破棄時・アプリ終了時にスクロール位置を即時保存
+    function handleBeforeUnload() {
+        saveCurrentScrollPosition();
+    }
+
+    onMount(() => {
+        window.addEventListener('beforeunload', handleBeforeUnload);
+    });
+
+    onDestroy(() => {
+        if (initialCenteringInterval) {
+            clearInterval(initialCenteringInterval);
+        }
+        // throttle 待ちをキャンセルして即時保存
+        throttledSaveScrollPosition.cancel();
+        saveCurrentScrollPosition();
+        window.removeEventListener('beforeunload', handleBeforeUnload);
+    });
 </script>
 
 {#if emptySnippet && !isLoading && messages.length === 0}

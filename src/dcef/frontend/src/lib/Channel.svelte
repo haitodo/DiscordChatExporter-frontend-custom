@@ -56,6 +56,7 @@
                         scrollToMessageId={guildState.channelMessageId}
                         snippetMessage={renderMessageSnippet2}
                         channelStartSnippet={channelStartSnippet}
+                        channelOrThreadId={apiChannelId}
                     />
                 {/key}
             {/key}

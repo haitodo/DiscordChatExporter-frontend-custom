@@ -1,5 +1,6 @@
 import ctypes
 from datetime import datetime
+import json
 import os
 import shutil
 import signal
@@ -10,6 +11,7 @@ import subprocess
 import atexit
 import threading
 import psutil
+import win32gui
 
 
 # https://stackoverflow.com/a/65501621
@@ -124,19 +126,95 @@ def cleanup():
 
 
 
+def load_window_state():
+	"""保存済みのウィンドウ状態をJSONファイルから読み込む"""
+	default_state = {'width': 1280, 'height': 720, 'x': None, 'y': None, 'maximized': False}
+	try:
+		state_file = BASE_DIR + '/dcef/storage/window_state.json'
+		if os.path.exists(state_file):
+			with open(state_file, 'r') as f:
+				state = json.load(f)
+				# サイズの最低値チェック
+				if state.get('width', 0) < 200 or state.get('height', 0) < 100:
+					return default_state
+				custom_print("windows-runner:", "ウィンドウ状態を復元", str(state))
+				return state
+	except Exception as e:
+		custom_print("windows-runner:", "ウィンドウ状態の読み込みに失敗", str(e))
+	return default_state
+
+def save_window_state(title):
+	"""ウィンドウの位置・サイズ・最大化状態をJSONファイルに保存する"""
+	try:
+		hwnd = win32gui.FindWindow(None, title)
+		if not hwnd:
+			custom_print("windows-runner:", "ウィンドウハンドルが見つかりません")
+			return
+
+		# GetWindowPlacement は最大化中でも通常時の位置・サイズを返す
+		placement = win32gui.GetWindowPlacement(hwnd)
+		show_cmd = placement[1]
+		normal_pos = placement[4]  # (left, top, right, bottom)
+
+		state = {
+			'x': normal_pos[0],
+			'y': normal_pos[1],
+			'width': normal_pos[2] - normal_pos[0],
+			'height': normal_pos[3] - normal_pos[1],
+			'maximized': show_cmd == 3  # SW_SHOWMAXIMIZED = 3
+		}
+
+		state_file = BASE_DIR + '/dcef/storage/window_state.json'
+		os.makedirs(os.path.dirname(state_file), exist_ok=True)
+		with open(state_file, 'w') as f:
+			json.dump(state, f)
+		custom_print("windows-runner:", "ウィンドウ状態を保存", str(state))
+	except Exception as e:
+		custom_print("windows-runner:", "ウィンドウ状態の保存に失敗", str(e))
+
+
 def create_window():
 	custom_print("windows-runner:", "creating window")
 	title = 'DiscordChatExporter-frontend'
 	if myapp.is_secondary_instance():
 		title += ' (secondary instance)'
+
+	# 前回のウィンドウ状態を読み込み
+	ws = load_window_state()
+
 	window = webview.create_window(title, 'http://127.0.0.1:21011/',
-		width=1280,
-		height=720,
+		width=ws['width'],
+		height=ws['height'],
+		x=ws.get('x'),
+		y=ws.get('y'),
 		background_color='#36393F',
 		text_select=True,
 		zoomable=True,
 		draggable=True,
 	)
+
+	# 前回最大化されていた場合、ウィンドウ読み込み後に最大化 (loadedの方が確実)
+	if ws.get('maximized'):
+		def on_loaded():
+			custom_print("windows-runner:", "restoring maximized state")
+			try:
+				window.maximize()
+			except:
+				pass
+			# 念のためWin32APIでも実行
+			try:
+				hwnd = win32gui.FindWindow(None, title)
+				if hwnd:
+					win32gui.ShowWindow(hwnd, 3) # SW_SHOWMAXIMIZED = 3
+			except:
+				pass
+		window.events.loaded += on_loaded
+
+	# ウィンドウを閉じる前に状態を保存
+	def on_closing():
+		save_window_state(title)
+	window.events.closing += on_closing
+
 	webview.start(debug=False, storage_path=BASE_DIR + '/dcef/storage', private_mode=False)
 	custom_print("windows-runner:", "window closed")
 

@@ -2,6 +2,7 @@ import { getSearchState } from "../../lib/search/searchState.svelte";
 import { isObjectEqual } from "../helpers";
 import { fetchCategoriesChannelsThreads, fetchGuilds } from "./api";
 import { getLayoutState } from "./layoutState.svelte";
+import { saveSessionState, getSessionState, getScrollMessageId } from "./sessionStore";
 
 let guilds = $state(await fetchGuilds());
 let guildId = $state("nonExistingGuildId");  // will be changed before the first load
@@ -132,6 +133,8 @@ export function getGuildState() {
 		}
 		const getParams = stateToParams(state)
 		window.history.pushState(state, `${state.guildId} ${state.channelId}`, `/?${getParams}`)
+		// セッション状態を localStorage に保存
+		saveSessionState(state);
 		console.log("router - pushed", state);
 	}
 
@@ -143,6 +146,8 @@ export function getGuildState() {
 		const state: any = _getStateObject()
 		const getParams = stateToParams(state)
 		window.history.replaceState(state, "", `/?${getParams}`)
+		// セッション状態を localStorage に保存
+		saveSessionState(state);
 		console.log("router - replaced", state);
 	}
 
@@ -325,8 +330,51 @@ const searchState = getSearchState()
 
 /**
  * Restore the state from the url on initial load
+ * URLにパラメータがない場合は localStorage から前回のセッションを復元する
  */
 let urlState = guildState.getUrlState();
+
+// URLにナビゲーション関連パラメータが一つもない場合、localStorage からフォールバック復元
+const hasUrlParams = urlState.guild || urlState.channel || urlState.thread || urlState.search;
+
+// "top", "bottom", "first", "last" などの特殊値は実際のメッセージIDではないため
+// スクロール位置の復元対象として扱う
+const isNotRealMessageId = (v: string | null) =>
+	!v || v === 'top' || v === 'bottom' || v === 'first' || v === 'last';
+
+if (!hasUrlParams) {
+	const savedSession = getSessionState();
+	if (savedSession) {
+		console.log("router - URLにパラメータなし、localStorageからセッション復元", savedSession);
+		// セッション復元時は、ジャンプ先などの一時IDよりも直近のスクロール位置を無条件で優先する
+		if (savedSession.channel) {
+			const scrollMsgId = getScrollMessageId(savedSession.channel);
+			if (scrollMsgId) savedSession.channelmessage = scrollMsgId;
+		}
+		if (savedSession.thread) {
+			const scrollMsgId = getScrollMessageId(savedSession.thread);
+			if (scrollMsgId) savedSession.threadmessage = scrollMsgId;
+		}
+		urlState = savedSession;
+	}
+} else {
+	// URLパラメータが存在する場合でも、特殊値の場合はlocalStorageから補完する
+	if (urlState.channel && isNotRealMessageId(urlState.channelmessage)) {
+		const scrollMsgId = getScrollMessageId(urlState.channel);
+		if (scrollMsgId) {
+			urlState.channelmessage = scrollMsgId;
+			console.log("router - チャネルスクロール位置を復元", scrollMsgId);
+		}
+	}
+	if (urlState.thread && isNotRealMessageId(urlState.threadmessage)) {
+		const scrollMsgId = getScrollMessageId(urlState.thread);
+		if (scrollMsgId) {
+			urlState.threadmessage = scrollMsgId;
+			console.log("router - スレッドスクロール位置を復元", scrollMsgId);
+		}
+	}
+}
+
 await restoreGuildState(urlState);
 await guildState.replaceState()  // set the initial state
 
