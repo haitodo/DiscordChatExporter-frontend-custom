@@ -41,6 +41,8 @@
     import help from "./other/help.svg?raw"
     import bin from "./other/bin.svg?raw"
     import plus from "./other/plus.svg?raw"
+    import bookmark from "./other/bookmark.svg?raw"
+    import bookmarkFilled from "./other/bookmark-filled.svg?raw"
 
     import arrowUp from "./modal/arrowUp.svg?raw"
     import modalX from "./modal/x.svg?raw"
@@ -86,6 +88,8 @@
                         "other/help" |
                         "other/bin" |
                         "other/plus" |
+                        "other/bookmark" |
+                        "other/bookmark-filled" |
                         "modal/arrowUp" |
                         "modal/x"
 
@@ -181,6 +185,10 @@
         {@html bin}
     {:else if name === "other/plus"}
         {@html plus}
+    {:else if name === "other/bookmark"}
+        {@html bookmark}
+    {:else if name === "other/bookmark-filled"}
+        {@html bookmarkFilled}
     {:else if name === "modal/arrowUp"}
         {@html arrowUp}
     {:else if name === "modal/x"}

@@ -2,6 +2,7 @@
     import { getGuildState } from "../js/stores/guildState.svelte";
     import { getLayoutState } from "../js/stores/layoutState.svelte";
     import Pinned from "./Pinned.svelte";
+    import Bookmarks from "./Bookmarks.svelte";
     import Icon from "./icons/Icon.svelte";
     import ChannelIcon from "./menuchannels/ChannelIcon.svelte";
     import SearchInput from "./search/SearchInput.svelte";
@@ -53,7 +54,7 @@
                     </div>
                 </div>
                 <div class="pin-wrapper">
-                    <div class="pin-btn icon" class:active={layoutState.channelpinnedshown} onclick={layoutState.toggleChannelPinned}>
+                    <div class="pin-btn icon" class:active={layoutState.channelpinnedshown} onclick={layoutState.toggleChannelPinned} title="Pinned Messages">
                         <Icon name="systemmessage/pinned" width={24} />
                     </div>
                     {#if layoutState.channelpinnedshown}
@@ -61,6 +62,16 @@
                             {#key guildState.channelId}
                                 <Pinned channelId={guildState.channelId} />
                             {/key}
+                        </div>
+                    {/if}
+                </div>
+                <div class="bookmark-wrapper">
+                    <div class="bookmark-btn icon" class:active={layoutState.bookmarksshown} onclick={layoutState.toggleBookmarks} title="Bookmarks & Reading Progress">
+                        <Icon name="other/bookmark" width={24} />
+                    </div>
+                    {#if layoutState.bookmarksshown}
+                        <div class="bookmark-panel-popout">
+                            <Bookmarks />
                         </div>
                     {/if}
                 </div>
@@ -161,6 +172,23 @@
             right: 0px;
 
             width: 400px;
+            z-index: 500;
+        }
+    }
+
+    .bookmark-wrapper {
+        display: flex;
+        position: relative;
+        .bookmark-btn {
+            margin: 0 10px;
+        }
+        .bookmark-panel-popout {
+            position: absolute;
+            top: 30px;
+            right: 0px;
+
+            width: 420px;
+            height: calc(100vh - 120px);
             z-index: 500;
         }
     }

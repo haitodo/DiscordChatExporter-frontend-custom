@@ -9,6 +9,8 @@
     import { getGuildState } from "../../js/stores/guildState.svelte";
     import { getLayoutState } from "../../js/stores/layoutState.svelte";
     import { getSearchState } from "../search/searchState.svelte";
+    import { getBookmarksStore } from "../../js/stores/bookmarkStore.svelte";
+    import Icon from "../icons/Icon.svelte";
 
     interface MyProps {
         message: Message;
@@ -166,6 +168,7 @@
         }
     }
 
+    const bookmarkStore = getBookmarksStore();
     const messageState = getMessageState(message, previousMessage)
 </script>
 
@@ -180,6 +183,11 @@
             <MessageSystemNotification message={message} />
         {:else}
             <MessageOrdinary message={message} messageState={messageState} />
+        {/if}
+        {#if bookmarkStore.isBookmarked(message.guildId, message._id)}
+            <div class="bookmark-indicator" title="★ お気に入りブックマーク">
+                <Icon name="other/bookmark-filled" width={16} />
+            </div>
         {/if}
     </div>
 </MesssageSpoilerHandler>
@@ -226,5 +234,14 @@
 
     .message.jumpable.ismobile .jump-btn {
         display: block;
+    }
+
+    .bookmark-indicator {
+        position: absolute;
+        top: 4px;
+        right: 12px;
+        color: #f1c40f;
+        z-index: 10;
+        pointer-events: none;
     }
 </style>

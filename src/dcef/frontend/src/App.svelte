@@ -17,9 +17,14 @@
     import { getLayoutState } from './js/stores/layoutState.svelte';
     import ViewUser from './lib/viewuser/ViewUser.svelte';
     import ImageGallery from './lib/imagegallery/ImageGallery.svelte';
+    import { fetchBookmarks, fetchCheckpoints } from './js/stores/bookmarkStore.svelte';
 
     onMount(() => {
+      fetchBookmarks();
+      fetchCheckpoints();
+
       const unsubscribe1 = theme.subscribe(value => {
+
         document.documentElement.setAttribute('data-theme', value);
       });
 

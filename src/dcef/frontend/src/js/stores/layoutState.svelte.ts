@@ -15,6 +15,7 @@ let mobile = $derived(windowWidth < 800);
 
 let channelpinnedshown = $state(false);
 let threadpinnedshown = $state(false);
+let bookmarksshown = $state(false);
 
 
 export function getLayoutState() {
@@ -115,6 +116,23 @@ export function getLayoutState() {
         threadpinnedshown = true;
     }
 
+    async function toggleBookmarks() {
+        if (bookmarksshown) {
+            hideBookmarks()
+        }
+        else {
+            await showBookmarks()
+        }
+    }
+    function hideBookmarks() {
+        bookmarksshown = false;
+    }
+    async function showBookmarks() {
+        bookmarksshown = true;
+        channelpinnedshown = false;
+        threadpinnedshown = false;
+    }
+
     return {
         get mobilesidepanelshown() {
             return mobilesidepanelshown;
@@ -149,6 +167,9 @@ export function getLayoutState() {
         get threadpinnedshown() {
             return threadpinnedshown;
         },
+        get bookmarksshown() {
+            return bookmarksshown;
+        },
 
         showThread,
         hideThread,
@@ -169,6 +190,9 @@ export function getLayoutState() {
         toggleThreadPinned,
         hideThreadPinned,
         showThreadPinned,
+        toggleBookmarks,
+        hideBookmarks,
+        showBookmarks,
     };
 }
 
