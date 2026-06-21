@@ -48,10 +48,31 @@ def is_compiled():
 
 def kill_dcef_processes():
 	dcef_process_names = ['dceffastapi.exe', 'dcefnginx.exe', 'dcefmongod.exe', 'dcefpreprocess.exe']
-	os.system('taskkill /f /im ' + ' /im '.join(dcef_process_names))
+	# subprocess.run と CREATE_NO_WINDOW を使用して、ウィンドウを表示せずに taskkill を実行します。
+	creationflags = 0
+	if sys.platform == 'win32':
+		creationflags = 0x08000000  # subprocess.CREATE_NO_WINDOW
+	
+	cmd = ['taskkill', '/f']
+	for name in dcef_process_names:
+		cmd.extend(['/im', name])
+	
+	try:
+		subprocess.run(cmd, creationflags=creationflags, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+	except Exception:
+		pass
 
 def kill_windows_runner():
-	os.system('taskkill /f /im dcef.exe')
+	# subprocess.run と CREATE_NO_WINDOW を使用して、ウィンドウを表示せずに taskkill を実行します。
+	creationflags = 0
+	if sys.platform == 'win32':
+		creationflags = 0x08000000  # subprocess.CREATE_NO_WINDOW
+	
+	cmd = ['taskkill', '/f', '/im', 'dcef.exe']
+	try:
+		subprocess.run(cmd, creationflags=creationflags, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+	except Exception:
+		pass
 
 
 def custom_print(source, *args, **kwargs):
@@ -225,7 +246,13 @@ def create_dir_if_not_exists(path):
 
 def runner(name, args, cwd):
 	custom_print("windows-runner:", name + " started")
-	args = ['cmd.exe', '/u','/c', 'cd', cwd, '&&'] + args
+	
+	# 実行ファイルのパスが相対パスの場合、cwd を用いて絶対パスに解決します。
+	exec_path = args[0]
+	if not os.path.isabs(exec_path):
+		exec_path = os.path.abspath(os.path.join(cwd, exec_path))
+	
+	args = [exec_path] + args[1:]
 	
 	creationflags = 0
 	if sys.platform == 'win32':
