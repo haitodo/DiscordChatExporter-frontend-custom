@@ -1,6 +1,7 @@
 import os
 import sys
 import functools
+import json
 
 from FileFinder import FileFinder
 from MongoDatabase import MongoDatabase
@@ -27,12 +28,27 @@ def rename_config_key(config, old_key: str, new_key: str):
 	print(f"Renamed config key {old_key} --> {new_key}")
 
 
+def get_expected_version():
+	if getattr(sys, 'frozen', False):
+		current_dir = os.path.dirname(sys.executable)
+	else:
+		current_dir = os.path.dirname(__file__)
+	
+	version_file_path = os.path.join(current_dir, 'schema_version.json')
+	try:
+		with open(version_file_path, 'r', encoding='utf-8') as f:
+			return json.load(f).get('schema_version', 16)
+	except Exception as e:
+		print(f"Warning: could not read schema_version.json from {version_file_path}, default to 16: {e}")
+		return 16
+
+
 def wipe_database(database: MongoDatabase):
 	"""
 	Deletes all collections on version bump (on program update)
-	Change EXPECTED_VERSION to force wipe on incompatible schema changes
+	Change EXPECTED_VERSION in schema_version.json to force wipe on incompatible schema changes
 	"""
-	EXPECTED_VERSION = 16    # <---- change this to wipe database
+	EXPECTED_VERSION = get_expected_version()
 
 	# ---- DEBUG force wipe ----
 	# import random
@@ -95,9 +111,10 @@ def main(input_dir):
 
 	file_finder = FileFinder(input_dir)
 
-	jsons = file_finder.find_channel_exports()
-	jsons_count_before = len(jsons)
-	jsons = remove_processed_jsons(database, jsons)
+	all_exports = file_finder.find_channel_exports()
+	jsons_count_before = len(all_exports)
+	cache_files_list = list(all_exports)
+	jsons = remove_processed_jsons(database, all_exports)
 	jsons_count = len(jsons)
 	jsons_size = 0
 	invalid_jsons = []
@@ -110,6 +127,8 @@ def main(input_dir):
 
 	for invalid_json in invalid_jsons:
 		jsons.remove(invalid_json)
+		if invalid_json in cache_files_list:
+			cache_files_list.remove(invalid_json)
 
 	print(f"    found {jsons_count} new possible json channel exports")
 	print(f"    found {jsons_count_before - jsons_count} already processed json channel exports")
@@ -130,6 +149,39 @@ def main(input_dir):
 			eta.increment(size)
 
 	print("preprocess done")
+
+	if sys.argv[1] == "windows":
+		storage_dir = "../../storage"
+	elif sys.argv[1] == "docker":
+		storage_dir = "/dcef/cache/preprocess"
+	else:
+		storage_dir = None
+
+	if storage_dir:
+		cache_data = {
+			"schema_version": get_expected_version(),
+			"files": {}
+		}
+		for json_path in cache_files_list:
+			full_path = file_finder.add_base_directory(json_path)
+			try:
+				if os.path.exists(full_path):
+					stat = os.stat(full_path)
+					cache_data["files"][json_path] = {
+						"size": stat.st_size,
+						"mtime": stat.st_mtime
+					}
+			except Exception as e:
+				print(f"Warning: could not get stat for {json_path} for caching: {e}")
+
+		cache_file = os.path.join(storage_dir, "preprocess_cache.json")
+		try:
+			os.makedirs(os.path.dirname(cache_file), exist_ok=True)
+			with open(cache_file, "w", encoding="utf-8") as f:
+				json.dump(cache_data, f, ensure_ascii=False, indent=2)
+			print(f"Successfully saved preprocess cache: {cache_file}")
+		except Exception as e:
+			print(f"Error saving preprocess cache: {e}")
 
 
 def print_help():

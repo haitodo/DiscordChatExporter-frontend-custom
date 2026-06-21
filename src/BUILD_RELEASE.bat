@@ -33,7 +33,7 @@ if not exist "_temp\dcef\venv" (
     call "_temp\dcef\venv\Scripts\python.exe" -m pip install -r requirements.txt
 )
 @REM Build windows-runner
-call "_temp\dcef\venv\Scripts\python.exe" -m PyInstaller --onefile --name dcef       --icon "../../icon.ico"  --distpath "_temp/dcef/"       --specpath "_temp/dcef/"       --workpath "_temp/dcef/"       ./dcef.py
+call "_temp\dcef\venv\Scripts\python.exe" -m PyInstaller --onefile --noconsole --name dcef       --icon "../../icon.ico"  --distpath "_temp/dcef/"       --specpath "_temp/dcef/"       --workpath "_temp/dcef/"       ./dcef.py
 del "..\release\dcef.exe"
 move "_temp\dcef\dcef.exe" "..\release\dcef.exe"
 
@@ -50,6 +50,7 @@ rmdir "..\release\dcef\backend\preprocess\" /s /q
 mkdir "..\release\dcef\backend\preprocess"
 move "_temp\preprocess\preprocess.exe" "..\release\dcef\backend\preprocess\dcefpreprocess.exe"
 copy "dcef\backend\preprocess\emojiIndex.json" "..\release\dcef\backend\preprocess\emojiIndex.json" /y
+copy "dcef\backend\preprocess\schema_version.json" "..\release\dcef\backend\preprocess\schema_version.json" /y
 
 
 @REM install api-backend dependencies

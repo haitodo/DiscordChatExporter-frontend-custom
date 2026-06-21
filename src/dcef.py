@@ -2,6 +2,7 @@ import ctypes
 from datetime import datetime
 import json
 import os
+import re
 import shutil
 import signal
 import sys
@@ -225,7 +226,12 @@ def create_dir_if_not_exists(path):
 def runner(name, args, cwd):
 	custom_print("windows-runner:", name + " started")
 	args = ['cmd.exe', '/u','/c', 'cd', cwd, '&&'] + args
-	process = subprocess.Popen(args, stdout=subprocess.PIPE, bufsize=1, cwd=cwd, stderr=subprocess.STDOUT, encoding='utf-8')
+	
+	creationflags = 0
+	if sys.platform == 'win32':
+		creationflags = 0x08000000  # subprocess.CREATE_NO_WINDOW
+		
+	process = subprocess.Popen(args, stdout=subprocess.PIPE, bufsize=1, cwd=cwd, stderr=subprocess.STDOUT, encoding='utf-8', creationflags=creationflags)
 	processes.append(process)
 
 	for byte_line in iter(process.stdout.readline, ''):
@@ -285,6 +291,32 @@ def show_console():
 
 
 
+def get_exports_state(exports_dir):
+	state = {}
+	if not os.path.exists(exports_dir):
+		return state
+
+	for root, dirs, files in os.walk(exports_dir):
+		for file in files:
+			if file.endswith('.json'):
+				if file.endswith('channel_info.json') or file.endswith('guild_info.json'):
+					continue
+				if re.search(r"-([a-fA-F0-9]{5})\.json$", file) is not None:
+					continue
+				
+				full_path = os.path.join(root, file)
+				rel_path = os.path.relpath(full_path, exports_dir).replace('\\', '/')
+				try:
+					stat = os.stat(full_path)
+					state[rel_path] = {
+						"size": stat.st_size,
+						"mtime": stat.st_mtime
+					}
+				except Exception:
+					pass
+	return state
+
+
 def main():
 	if myapp.is_secondary_instance():
 		# second instance just needs to open another window, the backend services are already running
@@ -306,10 +338,57 @@ def main():
 		time.sleep(1)
 		th_mongodb = start_mongodb()
 		th_fastapi = start_fastapi()
-		th_preprocess = start_preprocess()
+		
+		# Check if we can skip preprocessing
+		should_skip_preprocess = False
+		schema_version = None
+		schema_version_path = os.path.join(BASE_DIR, 'dcef/backend/preprocess/schema_version.json')
+		if os.path.exists(schema_version_path):
+			try:
+				with open(schema_version_path, 'r', encoding='utf-8') as f:
+					schema_version = json.load(f).get('schema_version')
+			except Exception as e:
+				custom_print("windows-runner:", f"Error reading schema_version.json: {e}")
+
+		cache_path = os.path.join(BASE_DIR, 'dcef/storage/preprocess_cache.json')
+		db_dir = os.path.join(BASE_DIR, '_temp/mongodb')
+		db_exists = os.path.exists(db_dir) and len(os.listdir(db_dir)) > 0
+
+		if db_exists and schema_version is not None and os.path.exists(cache_path):
+			try:
+				with open(cache_path, 'r', encoding='utf-8') as f:
+					cache_data = json.load(f)
+				
+				cached_version = cache_data.get('schema_version')
+				cached_files = cache_data.get('files', {})
+				
+				if cached_version == schema_version:
+					exports_dir = os.path.join(BASE_DIR, 'exports')
+					current_files = get_exports_state(exports_dir)
+					
+					if current_files == cached_files:
+						should_skip_preprocess = True
+						custom_print("windows-runner:", "Preprocess skipped (no changes detected in exports directory and schema version matches)")
+					else:
+						custom_print("windows-runner:", "Preprocess required (changes detected in exports directory)")
+				else:
+					custom_print("windows-runner:", f"Preprocess required (schema version mismatch: cached {cached_version} vs current {schema_version})")
+			except Exception as e:
+				custom_print("windows-runner:", f"Error loading preprocess cache, running preprocess: {e}")
+		else:
+			if not db_exists:
+				custom_print("windows-runner:", "Preprocess required (database does not exist or is empty)")
+			else:
+				custom_print("windows-runner:", "Preprocess required (cache file not found)")
+
+		if should_skip_preprocess:
+			th_preprocess = None
+		else:
+			th_preprocess = start_preprocess()
 
 
-		th_preprocess.join()  # Wait for preprocess to finish
+		if th_preprocess is not None:
+			th_preprocess.join()  # Wait for preprocess to finish
 
 		hide_console()
 		create_window()
