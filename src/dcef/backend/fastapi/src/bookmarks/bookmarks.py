@@ -205,6 +205,18 @@ async def set_checkpoint(req: CheckpointRequest):
 	db["checkpoints"].replace_one({"_id": checkpoint_id}, checkpoint, upsert=True)
 	return {"status": "success", "checkpoint_id": checkpoint_id}
 
+@router.delete("/checkpoints/{guild_id}/{channel_id}")
+async def delete_checkpoint(guild_id: str, channel_id: str):
+	"""
+	読了チェックポイントを削除します。
+	"""
+	guild_id = pad_id(guild_id)
+	channel_id = pad_id(channel_id)
+	checkpoint_id = f"{guild_id}_{channel_id}"
+
+	db["checkpoints"].delete_one({"_id": checkpoint_id})
+	return {"status": "success"}
+
 @router.get("/completed-channels")
 async def get_completed_channels():
 	"""

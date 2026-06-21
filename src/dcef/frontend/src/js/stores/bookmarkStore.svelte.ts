@@ -123,6 +123,22 @@ export async function setCheckpoint(guildId: string, channelId: string, messageI
 }
 
 /**
+ * 読了チェックポイントを削除します。
+ */
+export async function deleteCheckpoint(guildId: string, channelId: string) {
+    try {
+        const response = await fetch(`/api/checkpoints/${guildId}/${channelId}`, {
+            method: 'DELETE'
+        });
+        if (response.ok) {
+            await fetchCheckpoints();
+        }
+    } catch (e) {
+        console.error("Failed to delete checkpoint", e);
+    }
+}
+
+/**
  * すべての読了完了チャンネルをAPI経由でロードします。
  */
 export async function fetchCompletedChannels() {

@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { getBookmarksStore, deleteBookmark, updateBookmarkNote } from "../js/stores/bookmarkStore.svelte";
+    import { getBookmarksStore, deleteBookmark, updateBookmarkNote, deleteCheckpoint } from "../js/stores/bookmarkStore.svelte";
     import { getGuildState } from "../js/stores/guildState.svelte";
     import { getLayoutState } from "../js/stores/layoutState.svelte";
     import Message from "./message/Message.svelte";
@@ -34,6 +34,12 @@
     async function removeBookmark(guildId: string, messageId: string) {
         if (confirm("このブックマークを削除しますか？")) {
             await deleteBookmark(guildId, messageId);
+        }
+    }
+
+    async function removeCheckpoint(guildId: string, channelId: string) {
+        if (confirm("この読了チェックポイントを削除しますか？")) {
+            await deleteCheckpoint(guildId, channelId);
         }
     }
 
@@ -145,9 +151,14 @@
                                     最終更新: {new Date(cp.updated_at).toLocaleString('ja-JP')}
                                 </div>
                             </div>
-                            <div class="checkpoint-action">
-                                <span class="jump-label">ジャンプ</span>
-                                <Icon name="modal/arrowUp" width={16} />
+                            <div class="checkpoint-actions">
+                                <div class="checkpoint-action">
+                                    <span class="jump-label">ジャンプ</span>
+                                    <Icon name="modal/arrowUp" width={16} />
+                                </div>
+                                <button class="delete-btn" onclick={(e) => { e.stopPropagation(); removeCheckpoint(cp.guild_id, cp.channel_id); }} title="削除">
+                                    <Icon name="other/bin" width={16} />
+                                </button>
                             </div>
                         </div>
                     {/each}
@@ -485,5 +496,29 @@
 
     .checkpoint-item .checkpoint-action :global(div) {
         transform: rotate(90deg);
+    }
+
+    .checkpoint-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .delete-btn {
+        background: none;
+        border: none;
+        color: #949ba4;
+        cursor: pointer;
+        padding: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 4px;
+        transition: background-color 0.15s, color 0.15s;
+    }
+
+    .delete-btn:hover {
+        color: #fa777c;
+        background-color: rgba(250, 119, 124, 0.1);
     }
 </style>
