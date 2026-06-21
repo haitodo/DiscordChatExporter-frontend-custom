@@ -5,15 +5,36 @@
     import { contextMenuItems } from "../../js/stores/menuStore";
     import { linkHandler, channelScrollPosition } from "../../js/stores/settingsStore.svelte";
     import { getLayoutState } from "../../js/stores/layoutState.svelte";
+    import { getBookmarksStore, markChannelCompleted, unmarkChannelCompleted } from "../../js/stores/bookmarkStore.svelte";
 
 
-    export let thread: Channel
-    export let parentChannelId: string
-    export let isLast: boolean
+    interface MyProps {
+        thread: Channel;
+        parentChannelId: string;
+        isLast: boolean;
+    }
+    let { thread, parentChannelId, isLast }: MyProps = $props();
+
+    const bookmarkStore = getBookmarksStore();
+    const checkpoint = $derived(bookmarkStore.getCheckpoint(thread.guildId, thread._id));
+    const readCount = $derived(checkpoint?.read_count ?? 0);
+    const totalCount = $derived(checkpoint?.total_count ?? 0);
+    const progressPercent = $derived(totalCount > 0 ? Math.round((readCount / totalCount) * 100) : null);
+    const isCompleted = $derived(bookmarkStore.isCompleted(thread.guildId, thread._id) || (progressPercent !== null && progressPercent === 100));
 
 
     function onThreadRightClick(e, id: string, name: string) {
 		$contextMenuItems = [
+            {
+                "name": isCompleted ? "✖ 読了完了マークを解除" : "✔ 読了完了としてマーク",
+                "action": async () => {
+                    if (isCompleted) {
+                        await unmarkChannelCompleted(thread.guildId, thread._id);
+                    } else {
+                        await markChannelCompleted(thread.guildId, thread._id);
+                    }
+                }
+            },
             {
 				"name": `Open thread in discord ${$linkHandler === 'app' ? "app" : "web"}`,
 				"action": () => {
@@ -74,7 +95,22 @@
             </svg>
         {/if}
     </div>
-    <div class="thread-name" title="{thread.msg_count} messages">{thread.name}</div>
+    <div class="thread-name-container">
+        <div class="thread-name" title="{thread.msg_count} messages">{thread.name}</div>
+        {#if progressPercent !== null}
+            <span class="progress-badge" class:completed={isCompleted} title="{readCount} / {totalCount} messages read ({progressPercent}%)">
+                {#if isCompleted}
+                    <svg class="check-icon" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                {:else}
+                    {progressPercent}%
+                {/if}
+            </span>
+        {:else if isCompleted}
+            <span class="progress-badge completed" title="読了完了">
+                <svg class="check-icon" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            </span>
+        {/if}
+    </div>
 </div>
 
 
@@ -121,8 +157,16 @@
         height: 39px;
     }
 
-    .thread-name {
+    .thread-name-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-grow: 1;
+        min-width: 0;
         padding-left: 7px;
+    }
+
+    .thread-name {
         display: -webkit-box;
         -webkit-line-clamp: 1;
         -webkit-box-orient: vertical;
@@ -132,8 +176,44 @@
         font-size: inherit;
         height: 20px;
         overflow: hidden;
+        flex-grow: 1;
+        min-width: 0;
     }
     .selected .thread-name {
         color: white;
+    }
+
+    .progress-badge {
+        font-size: 10px;
+        font-weight: 700;
+        color: #949ba4;
+        background-color: rgba(255, 255, 255, 0.06);
+        padding: 1px 5px;
+        border-radius: 8px;
+        margin-left: 6px;
+        white-space: nowrap;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        height: 16px;
+        min-width: 16px;
+        box-sizing: border-box;
+        transition: all 0.15s ease;
+    }
+    .progress-badge:hover {
+        background-color: rgba(255, 255, 255, 0.12);
+        color: #dbdee1;
+        transform: scale(1.05);
+    }
+    .progress-badge.completed {
+        color: #ffffff;
+        background-color: #23a55a;
+    }
+    .progress-badge.completed:hover {
+        background-color: #24b462;
+    }
+    
+    .check-icon {
+        display: inline-block;
     }
 </style>

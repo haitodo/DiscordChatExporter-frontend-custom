@@ -26,6 +26,10 @@ class CheckpointRequest(BaseModel):
 	message_id: str
 	timestamp: str
 
+class CompletedChannelRequest(BaseModel):
+	guild_id: str
+	channel_id: str
+
 @router.get("/bookmarks")
 async def get_bookmarks(guild_id: str | None = None, channel_id: str | None = None):
 	"""
@@ -120,11 +124,48 @@ async def delete_bookmark(guild_id: str, message_id: str):
 @router.get("/checkpoints")
 async def get_checkpoints():
 	"""
-	すべての読了チェックポイントを取得します。
+	すべての読了チェックポイントを取得します。進捗データ（既読メッセージ数と総メッセージ数）も計算して付与します。
 	"""
 	checkpoints = list(db["checkpoints"].find().sort("updated_at", -1))
+	
+	try:
+		denylisted_user_ids = Database.get_denylisted_user_ids()
+	except Exception:
+		denylisted_user_ids = []
+
 	for cp in checkpoints:
 		cp["_id"] = str(cp["_id"])
+		
+		# 進捗率の計算
+		guild_id = cp.get("guild_id")
+		channel_id = cp.get("channel_id")
+		message_id = cp.get("message_id")
+		if guild_id and channel_id and message_id:
+			try:
+				collection_messages = Database.get_guild_collection(guild_id, "messages")
+				
+				# チェックポイント以前の既読メッセージ数をカウント（除外ユーザーを除く）
+				read_count = collection_messages.count_documents({
+					"channelId": channel_id,
+					"author._id": {"$nin": denylisted_user_ids},
+					"_id": {"$lte": message_id}
+				})
+				
+				# チャンネル全体の総メッセージ数をカウント（除外ユーザーを除く）
+				total_count = collection_messages.count_documents({
+					"channelId": channel_id,
+					"author._id": {"$nin": denylisted_user_ids}
+				})
+				
+				cp["read_count"] = read_count
+				cp["total_count"] = total_count
+			except Exception:
+				cp["read_count"] = 0
+				cp["total_count"] = 0
+		else:
+			cp["read_count"] = 0
+			cp["total_count"] = 0
+			
 	return checkpoints
 
 @router.put("/checkpoints")
@@ -163,3 +204,58 @@ async def set_checkpoint(req: CheckpointRequest):
 
 	db["checkpoints"].replace_one({"_id": checkpoint_id}, checkpoint, upsert=True)
 	return {"status": "success", "checkpoint_id": checkpoint_id}
+
+@router.get("/completed-channels")
+async def get_completed_channels():
+	"""
+	すべての読了完了チャンネル/スレッドを取得します。
+	"""
+	completed = list(db["completed_channels"].find())
+	for c in completed:
+		c["_id"] = str(c["_id"])
+	return completed
+
+@router.put("/completed-channels")
+async def mark_channel_completed(req: CompletedChannelRequest):
+	"""
+	チャンネル/スレッドを読了完了としてマークします。
+	"""
+	guild_id = pad_id(req.guild_id)
+	channel_id = pad_id(req.channel_id)
+	completed_id = f"{guild_id}_{channel_id}"
+
+	# ギルド名を取得
+	guild = db["guilds"].find_one({"_id": guild_id})
+	guild_name = guild["name"] if guild else "不明なサーバー"
+
+	# チャンネル名を取得
+	try:
+		collection_channels = Database.get_guild_collection(guild_id, "channels")
+		channel = collection_channels.find_one({"_id": channel_id})
+		channel_name = channel["name"] if channel else "不明なチャンネル"
+	except Exception:
+		channel_name = "不明なチャンネル"
+
+	doc = {
+		"_id": completed_id,
+		"guild_id": guild_id,
+		"guild_name": guild_name,
+		"channel_id": channel_id,
+		"channel_name": channel_name,
+		"completed_at": datetime.datetime.utcnow().isoformat()
+	}
+
+	db["completed_channels"].replace_one({"_id": completed_id}, doc, upsert=True)
+	return {"status": "success", "completed_id": completed_id}
+
+@router.delete("/completed-channels/{guild_id}/{channel_id}")
+async def unmark_channel_completed(guild_id: str, channel_id: str):
+	"""
+	チャンネル/スレッドの読了完了マークを解除します。
+	"""
+	guild_id = pad_id(guild_id)
+	channel_id = pad_id(channel_id)
+	completed_id = f"{guild_id}_{channel_id}"
+
+	db["completed_channels"].delete_one({"_id": completed_id})
+	return {"status": "success"}
