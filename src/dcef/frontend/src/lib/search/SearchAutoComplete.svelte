@@ -1,6 +1,7 @@
 <script lang="ts">
     import { checkUrl } from "../../js/helpers";
-    import { fetchAutocomplete } from "../../js/stores/api";
+    import { fetchAutocomplete, type AutocompleteSuggestion } from "../../js/stores/api";
+    import type { Channel } from "../../js/interfaces";
     import { findChannelsByName, findThreadsByName, getGuildState } from "../../js/stores/guildState.svelte";
     import Icon from "../icons/Icon.svelte";
     import ChannelIcon from "../menuchannels/ChannelIcon.svelte";
@@ -25,12 +26,12 @@
     let lastKey = $derived(searchState.selection.lastKey);
     let lastValue = $derived(searchState.selection.lastValue);
     let allHistory = $derived(searchState.searchHistory);
-    let fromAutoComplete = $state([])
-    let mentionAutoComplete = $state([])
-    let channelAutoComplete = $state([])
-    let threadAutoComplete = $state([])
-    let filenameAutoComplete = $state([])
-    let emojisAutoComplete = $state([])
+    let fromAutoComplete = $state<AutocompleteSuggestion[]>([])
+    let mentionAutoComplete = $state<AutocompleteSuggestion[]>([])
+    let channelAutoComplete = $state<Channel[]>([])
+    let threadAutoComplete = $state<Channel[]>([])
+    let filenameAutoComplete = $state<AutocompleteSuggestion[]>([])
+    let emojisAutoComplete = $state<AutocompleteSuggestion[]>([])
     let selectBoolean = $state(false)
 
     let showCalendar = $state(false)
