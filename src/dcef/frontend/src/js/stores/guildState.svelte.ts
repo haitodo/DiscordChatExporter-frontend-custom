@@ -3,13 +3,14 @@ import { isObjectEqual } from "../helpers";
 import { fetchCategoriesChannelsThreads, fetchGuilds } from "./api";
 import { getLayoutState } from "./layoutState.svelte";
 import { saveSessionState, getSessionState, getScrollMessageId } from "./sessionStore";
+import type { Category } from "../interfaces";
 
 let guilds = $state(await fetchGuilds());
 let guildId = $state("nonExistingGuildId");  // will be changed before the first load
 let guild = $derived(guilds.find(g => g._id === guildId) || null);
 
 let channelId: string | null = $state(null);
-let categories = $state([]);
+let categories = $state<Category[]>([]);
 let channel = $derived(categories.flatMap(c => c.channels).find(c => c._id === channelId) || null);
 let channelMessageId = $state(null);
 

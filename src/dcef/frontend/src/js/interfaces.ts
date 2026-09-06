@@ -8,7 +8,8 @@ export interface Guild {
 export interface Category {
 	_id: string;
 	name: string;
-	channels: Channel[]
+	channels: ChannelWithThreads[];
+	msg_count: number;
 }
 
 export interface Asset {
@@ -37,6 +38,11 @@ export interface Channel {
 	topic: string | null;
 	guildId: string;
 	msg_count: number;
+}
+
+/** A channel after thread relationships have been assembled for the menu. */
+export interface ChannelWithThreads extends Channel {
+	threads: Channel[];
 }
 
 export interface Role {
@@ -155,4 +161,45 @@ export interface Message {
 export interface MessageIdLoad {
 	_id: string;
 	loaded: boolean;
+}
+
+export interface MessagePage {
+	prevPage: string | null;
+	nextPage: string | null;
+	messageIds: string[];
+	messages: Message[];
+}
+
+export interface Bookmark {
+	_id: string;
+	guild_id: string;
+	guild_name: string;
+	channel_id: string;
+	channel_name: string;
+	message_id: string;
+	note: string;
+	message: Message;
+	created_at: string;
+}
+
+export interface Checkpoint {
+	_id: string;
+	guild_id: string;
+	guild_name: string;
+	channel_id: string;
+	channel_name: string;
+	message_id: string;
+	timestamp: string;
+	updated_at: string;
+	read_count: number;
+	total_count: number;
+}
+
+export interface CompletedChannel {
+	_id: string;
+	guild_id: string;
+	guild_name: string;
+	channel_id: string;
+	channel_name: string;
+	completed_at: string;
 }

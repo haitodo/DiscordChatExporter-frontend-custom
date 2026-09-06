@@ -2,7 +2,7 @@
     import MenuThread from "./MenuThread.svelte";
     import { copyTextToClipboard } from "../../js/helpers";
     import { contextMenuItems } from "../../js/stores/menuStore";
-    import type { Channel } from "../../js/interfaces";
+    import type { ChannelWithThreads } from "../../js/interfaces";
     import { getGuildState } from "../../js/stores/guildState.svelte";
     import { linkHandler, channelScrollPosition } from "../../js/stores/settingsStore.svelte";
     import ChannelIcon from "./ChannelIcon.svelte";
@@ -11,7 +11,7 @@
 
 
     interface MyProps {
-        channel: Channel;
+        channel: ChannelWithThreads;
     }
     let { channel }: MyProps = $props();
 
@@ -49,7 +49,7 @@
         }
     })
 
-    function onChannelRightClick(e, id: string, name: string) {
+    function onChannelRightClick(e: MouseEvent, id: string, name: string) {
 		$contextMenuItems = [
             {
                 "name": isCompleted ? "✖ 読了完了マークを解除" : "✔ 読了完了としてマーク",

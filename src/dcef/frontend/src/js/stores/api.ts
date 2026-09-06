@@ -1,95 +1,94 @@
-import type { Category, Channel } from "../interfaces";
+import type { Category, Channel, ChannelWithThreads, MessagePage } from "../interfaces";
 
-export async function fetchMessages(guildId: string | null, channelId: string, direction: "before" | "after" | "around" | "first" | "last", messageId: string | null = null, limit: number = 50) {
+type PageDirection = "before" | "after" | "around" | "first" | "last";
+
+const DEFAULT_GUILD_ID = "000000000000000000000000";
+const FIRST_CURSOR = "0";
+const LAST_CURSOR = "999999999999999999999999";
+
+const EMPTY_MESSAGE_PAGE: MessagePage = {
+    prevPage: null,
+    messageIds: [],
+    nextPage: null,
+    messages: [],
+};
+
+function normalizeGuildId(guildId: string | null): string {
+    return guildId ?? DEFAULT_GUILD_ID;
+}
+
+function normalizeCursor(messageId: string | null): string {
+    if (messageId === null || messageId === "first" || messageId === "top") {
+        return FIRST_CURSOR;
+    }
+    if (messageId === "last" || messageId === "bottom") {
+        return LAST_CURSOR;
+    }
+    return messageId;
+}
+
+function getCursorParameter(direction: PageDirection, messageId: string | null): [string, string] {
+    switch (direction) {
+        case "first":
+            return ["next_page_cursor", FIRST_CURSOR];
+        case "last":
+            return ["prev_page_cursor", LAST_CURSOR];
+        case "before":
+            return ["prev_page_cursor", normalizeCursor(messageId)];
+        case "after":
+            return ["next_page_cursor", normalizeCursor(messageId)];
+        case "around":
+            return ["around_page_cursor", normalizeCursor(messageId)];
+    }
+}
+
+async function fetchPage(
+    endpoint: string,
+    params: Record<string, string | number>,
+    errorMessage: string,
+): Promise<MessagePage> {
+    try {
+        const query = new URLSearchParams();
+        for (const [key, value] of Object.entries(params)) {
+            query.set(key, String(value));
+        }
+        const response = await fetch(`${endpoint}?${query}`);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        return await response.json() as MessagePage;
+    } catch (error) {
+        console.error(errorMessage, error);
+        return EMPTY_MESSAGE_PAGE;
+    }
+}
+
+export async function fetchMessages(guildId: string | null, channelId: string, direction: PageDirection, messageId: string | null = null, limit: number = 50): Promise<MessagePage> {
     if (channelId === null) {
         console.error("api - fetchMessageIds - channelId is null")
-        return {
-            prev_page_cursor: null,
-            messageIds: [],
-            next_page_cursor: null,
-            messages: []
-        }
+        return EMPTY_MESSAGE_PAGE;
     }
-    if (guildId === null) {
-        guildId = "000000000000000000000000"
-    }
-    if (messageId === null || messageId === "first" || messageId === "top") {
-        messageId = "000000000000000000000000"
-    }
-    else if (messageId === "last" || messageId === "bottom") {
-        messageId = "999999999999999999999999"
-    }
-    try {
-        let response
-        if (direction === "first") {
-            response = await fetch(`/api/guild/messages?guild_id=${encodeURIComponent(guildId)}&channel_id=${encodeURIComponent(channelId)}&next_page_cursor=0&limit=${encodeURIComponent(limit)}`)
-        }
-        else if (direction === "last") {
-            response = await fetch(`/api/guild/messages?guild_id=${encodeURIComponent(guildId)}&channel_id=${encodeURIComponent(channelId)}&prev_page_cursor=999999999999999999999999&limit=${encodeURIComponent(limit)}`)
-        }
-        else if (direction === "before") {
-            response = await fetch(`/api/guild/messages?guild_id=${encodeURIComponent(guildId)}&channel_id=${encodeURIComponent(channelId)}&prev_page_cursor=${encodeURIComponent(messageId)}&limit=${encodeURIComponent(limit)}`)
-        }
-        else if (direction === "after") {
-            response = await fetch(`/api/guild/messages?guild_id=${encodeURIComponent(guildId)}&channel_id=${encodeURIComponent(channelId)}&next_page_cursor=${encodeURIComponent(messageId)}&limit=${encodeURIComponent(limit)}`)
-        }
-        else {
-            response = await fetch(`/api/guild/messages?guild_id=${encodeURIComponent(guildId)}&channel_id=${encodeURIComponent(channelId)}&around_page_cursor=${encodeURIComponent(messageId)}&limit=${encodeURIComponent(limit)}`)
-        }
-
-        let retObj = await response.json()
-        return retObj
-    }
-    catch (e) {
-        console.error("api - Failed to fetch message ids", e)
-        return {
-            prev_page_cursor: null,
-            messageIds: [],
-            next_page_cursor: null,
-            messages: []
-        }
-    }
+    const [cursorKey, cursor] = getCursorParameter(direction, messageId);
+    return fetchPage("/api/guild/messages", {
+        guild_id: normalizeGuildId(guildId),
+        channel_id: channelId,
+        [cursorKey]: cursor,
+        limit,
+    }, "api - Failed to fetch messages");
 }
 
-export async function fetchSearch(guildId: string | null, prompt: string, direction: "before" | "after" | "around" | "first" | "last", messageId: string | null = null, limit: number = 50) {
-    if (guildId === null) {
-        guildId = "000000000000000000000000"
-    }
-    if (messageId === null || messageId === "first" || messageId === "top") {
-        messageId = "000000000000000000000000"
-    }
-    else if (messageId === "last" || messageId === "bottom") {
-        messageId = "999999999999999999999999"
-    }
-    try {
-        let response
-        if (direction === "first") {
-            response = await fetch(`/api/guild/search?guild_id=${encodeURIComponent(guildId)}&prompt=${encodeURIComponent(prompt)}&next_page_cursor=0&limit=${encodeURIComponent(limit)}`)
-        }
-        else if (direction === "last") {
-            response = await fetch(`/api/guild/search?guild_id=${encodeURIComponent(guildId)}&prompt=${encodeURIComponent(prompt)}&prev_page_cursor=999999999999999999999999&limit=${encodeURIComponent(limit)}`)
-        }
-        else if (direction === "before") {
-            response = await fetch(`/api/guild/search?guild_id=${encodeURIComponent(guildId)}&prompt=${encodeURIComponent(prompt)}&prev_page_cursor=${encodeURIComponent(messageId)}&limit=${encodeURIComponent(limit)}`)
-        }
-        else if (direction === "after") {
-            response = await fetch(`/api/guild/search?guild_id=${encodeURIComponent(guildId)}&prompt=${encodeURIComponent(prompt)}&next_page_cursor=${encodeURIComponent(messageId)}&limit=${encodeURIComponent(limit)}`)
-        }
-        else {
-            response = await fetch(`/api/guild/search?guild_id=${encodeURIComponent(guildId)}&prompt=${encodeURIComponent(prompt)}&around_page_cursor=${encodeURIComponent(messageId)}&limit=${encodeURIComponent(limit)}`)
-        }
-
-        let messageIds = await response.json()
-        return messageIds
-    }
-    catch (e) {
-        console.error("api - Failed to fetch search", e)
-        return []
-    }
+export async function fetchSearch(guildId: string | null, prompt: string, direction: PageDirection, messageId: string | null = null, limit: number = 50): Promise<MessagePage> {
+    const [cursorKey, cursor] = getCursorParameter(direction, messageId);
+    return fetchPage("/api/guild/search", {
+        guild_id: normalizeGuildId(guildId),
+        prompt,
+        [cursorKey]: cursor,
+        limit,
+    }, "api - Failed to fetch search");
 }
 
-export async function fetchPinnedMessages(guildId: string | null, channelId: string, direction: "before" | "after" | "around" | "first" | "last", messageId: string | null = null, limit: number = 50) {
-    const prompt = `pinned:true in_id:${encodeURIComponent(channelId)}`
+export async function fetchPinnedMessages(guildId: string | null, channelId: string, direction: PageDirection, messageId: string | null = null, limit: number = 50): Promise<MessagePage> {
+    const prompt = `pinned:true in_id:${channelId}`
     return fetchSearch(guildId, prompt, direction, messageId, limit)
 }
 
@@ -97,37 +96,39 @@ export async function fetchSearchCount(guildId: string | null, prompt: string): 
     // delay a bit to make sure (faster) search query runs first
     await new Promise(r => setTimeout(r, 25));
 
-    if (guildId === null) {
-        guildId = "000000000000000000000000"
-    }
     try {
-        let response = await fetch(`/api/guild/search/count?guild_id=${encodeURIComponent(guildId)}&prompt=${encodeURIComponent(prompt)}`)
-        let count = await response.text()
-        // if numeric, return as number
-        try {
-            return Number(count)
+        const params = new URLSearchParams({
+            guild_id: normalizeGuildId(guildId),
+            prompt,
+        });
+        const response = await fetch(`/api/guild/search/count?${params}`);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
         }
-        catch (e) {
-            return "error"
-        }
+        const count = Number(await response.text());
+        return Number.isFinite(count) ? count : "error";
     }
-    catch (e) {
-        console.error("api - Failed to fetch search count", e)
+    catch (error) {
+        console.error("api - Failed to fetch search count", error)
         return "error"
     }
 }
 
 export async function fetchAutocomplete(guildId: string | null, key: string, value: string, limit: number = 3) {
-    if (guildId === null) {
-        guildId = "000000000000000000000000"
-    }
     try {
-        let response = await fetch(`/api/guild/search/autocomplete?guild_id=${encodeURIComponent(guildId)}&key=${encodeURIComponent(key)}&value=${encodeURIComponent(value)}&limit=${encodeURIComponent(limit)}`)
-        let json = await response.json()
-        return json
-    }
-    catch (e) {
-        console.error("api - Failed to fetch autocomplete", e)
+        const params = new URLSearchParams({
+            guild_id: normalizeGuildId(guildId),
+            key,
+            value,
+            limit: String(limit),
+        });
+        const response = await fetch(`/api/guild/search/autocomplete?${params}`);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        return await response.json();
+    } catch (error) {
+        console.error("api - Failed to fetch autocomplete", error)
         return []
     }
 }
@@ -148,117 +149,85 @@ export async function fetchGuilds() {
 }
 
 
-export async function fetchCategoriesChannelsThreads(guildId: string): Promise<Category[]> {
-    if (guildId === null) {
-        guildId = "000000000000000000000000"
-    }
+export async function fetchCategoriesChannelsThreads(guildId: string | null): Promise<Category[]> {
+    guildId = normalizeGuildId(guildId);
     try {
-        const response = await fetch(`/api/guild/channels?guild_id=${guildId}`)
-        let json_response: Channel[] = await response.json()
-
-        let categories_temp = []
-        let channels_temp = []
-        let lost_threads = []
-
-
-
-        // create categories
-        if (guildId === "000000000000000000000000") {
-            let category = {
-                _id: '0',
-                name: "Direct Messages",
-                channels: [],
-                msg_count: 0,
-            }
-            categories_temp.push(category)
+        const params = new URLSearchParams({ guild_id: guildId });
+        const response = await fetch(`/api/guild/channels?${params}`);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
         }
-        else {
-            let found_categories_ids: string[] = []
-            for (let channel of json_response) {
-                if (channel.type !== "GuildPublicThread" && channel.type !== "GuildPrivateThread") {
-                    if (!found_categories_ids.includes(channel.categoryId)) {
-                        let category = {
-                            _id: channel.categoryId,
-                            name: channel.category,
-                            channels: [],
-                            msg_count: 0,
-                        }
-                        categories_temp.push(category)
-                        found_categories_ids.push(channel.categoryId)
-                    }
-                }
+        const channels: Channel[] = await response.json();
+        const isThread = (channel: Channel) =>
+            channel.type === "GuildPublicThread" || channel.type === "GuildPrivateThread";
+        const channelsWithThreads: ChannelWithThreads[] = channels
+            .filter(channel => !isThread(channel))
+            .map(channel => ({
+                ...channel,
+                categoryId: guildId === DEFAULT_GUILD_ID ? "0" : channel.categoryId,
+                threads: [],
+            }));
+        const categories: Category[] = guildId === DEFAULT_GUILD_ID
+            ? [{ _id: "0", name: "Direct Messages", channels: [], msg_count: 0 }]
+            : [];
+
+        for (const channel of channelsWithThreads) {
+            let category = categories.find(item => item._id === channel.categoryId);
+            if (!category) {
+                category = {
+                    _id: channel.categoryId,
+                    name: channel.category,
+                    channels: [],
+                    msg_count: 0,
+                };
+                categories.push(category);
             }
+            category.channels.push(channel);
+            category.msg_count += channel.msg_count;
         }
 
-        // create channels (excluding threads)
-        for (let channel of json_response) {
-            if (channel.type !== "GuildPublicThread" && channel.type !== "GuildPrivateThread") {
-                channel["threads"] = []
-                if (guildId === "000000000000000000000000") {
-                    channel["categoryId"] = '0'
-                }
-                channels_temp.push(channel)
-            }
-        }
-
-        // add threads to their respective channels
-        for (let channel of json_response) {
-            if (channel.type === "GuildPublicThread" || channel.type === "GuildPrivateThread") {
-                let parent_channel = channels_temp.find((c) => c._id === channel.categoryId)
-                if (parent_channel) {
-                    parent_channel.msg_count += channel.msg_count
-                    parent_channel.threads.push(channel)
-                }
-                else {
-                    lost_threads.push(channel)
-                }
+        const lostThreads: Channel[] = [];
+        for (const thread of channels.filter(isThread)) {
+            const parent = channelsWithThreads.find(channel => channel._id === thread.categoryId);
+            if (parent) {
+                parent.threads.push(thread);
+                parent.msg_count += thread.msg_count;
+                const category = categories.find(item => item._id === parent.categoryId);
+                if (category) category.msg_count += thread.msg_count;
+            } else {
+                lostThreads.push(thread);
             }
         }
 
-        // add channels to their respective categories
-        for (let channel of channels_temp) {
-            let category = categories_temp.find((c) => c._id === channel.categoryId)
-            if (category) {
-                category.msg_count += channel.msg_count
-                category.channels.push(channel)
-            }
-            else {
-                console.error("(this will never happen) - Category not found for channel", channel)
-            }
-        }
-
-        // push threads without parent channel to a separate category so they are shown in the UI
-        if (lost_threads.length > 0) {
-            let msg_count = lost_threads.reduce((acc, thread) => acc + thread.msg_count, 0)
-            categories_temp.push({
-                _id: '0',
-                name: 'Lost threads / forums',
+        if (lostThreads.length > 0) {
+            const msgCount = lostThreads.reduce((total, thread) => total + thread.msg_count, 0);
+            categories.push({
+                _id: "lost-threads",
+                name: "Lost threads / forums",
+                msg_count: msgCount,
                 channels: [{
-                    _id: '0',
-                    type: 'GuildTextChat',
-                    categoryId: '0',
-                    category: 'Lost threads / forums',
-                    name: 'Lost threads / forums',
+                    _id: "lost-threads",
+                    type: "GuildTextChat",
+                    categoryId: "lost-threads",
+                    category: "Lost threads / forums",
+                    name: "Lost threads / forums",
                     topic: null,
-                    threads: lost_threads,
-                    msg_count: msg_count,
-                    guildId: guildId,
-                }]
-            })
+                    threads: lostThreads,
+                    msg_count: msgCount,
+                    guildId,
+                }],
+            });
         }
 
-        categories_temp = categories_temp.sort((a, b) => b.msg_count - a.msg_count)
-        categories_temp.forEach((category) => {
-            category.channels = category.channels.sort((a, b) => b.msg_count - a.msg_count)
-            category.channels.forEach((channel) => {
-                channel.threads = channel.threads.sort((a, b) => b.msg_count - a.msg_count)
-            })
-        })
-
-        return categories_temp
-    }
-    catch (e) {
-        console.error("api - Failed to fetch channels", e)
+        for (const category of categories) {
+            category.channels.sort((a, b) => b.msg_count - a.msg_count);
+            for (const channel of category.channels) {
+                channel.threads.sort((a, b) => b.msg_count - a.msg_count);
+            }
+        }
+        return categories.sort((a, b) => b.msg_count - a.msg_count);
+    } catch (error) {
+        console.error("api - Failed to fetch channels", error)
     }
     return []
 }

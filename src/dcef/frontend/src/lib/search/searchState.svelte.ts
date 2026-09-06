@@ -7,7 +7,7 @@ let searchPrompt = $state("");
 let selectionStart = $state(0);
 let selectionEnd = $state(0);
 let submittedSearchPrompt = $state("");
-let searchResultsIds = $state([]);
+let searchResultsIds = $state<string[]>([]);
 let gotResults = $state(false);
 let searching = $state(false);
 let error = $state("");
@@ -64,7 +64,8 @@ export function getSearchState() {
         console.log("searchState - search", $state.snapshot(submittedSearchPrompt));
 
         try {
-            searchResultsIds = await fetchSearch(guildId, submittedSearchPrompt);
+            const searchResults = await fetchSearch(guildId, submittedSearchPrompt, "first");
+            searchResultsIds = searchResults.messageIds;
             console.log(`searchState - search - searchResultsIds count ${searchResultsIds.length}`);
         }
         catch (e) {

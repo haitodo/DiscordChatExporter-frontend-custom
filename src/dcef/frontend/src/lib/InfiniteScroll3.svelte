@@ -3,13 +3,18 @@
     import {throttle, debounce} from 'lodash-es';
     import { jumpToMessageAnimated } from "../js/stores/settingsStore.svelte";
     import { saveScrollMessageId } from "../js/stores/sessionStore";
+    import type { Message, MessagePage } from "../js/interfaces";
+
+    type ScrollDirection = "before" | "after" | "around";
+    type MessageSnippet = Snippet<[message: Message, previousMessage: Message | null]>;
+    type ChannelStartSnippet = Snippet<[message: Message]>;
 
     interface MyProps {
-        fetchMessages: (direction: "before" | "after" | "around" , messageId: string, limit: number) => Promise<string[]>
-        snippetMessage: Snippet
+        fetchMessages: (direction: ScrollDirection, messageId: string, limit: number) => Promise<MessagePage>
+        snippetMessage: MessageSnippet
         scrollToMessageId: string
-        emptySnippet?: Snippet
-        channelStartSnippet?: Snippet
+        emptySnippet?: Snippet<[]>
+        channelStartSnippet?: ChannelStartSnippet
         channelOrThreadId?: string | null
     }
 
@@ -17,7 +22,7 @@
 
     let SHOWDEBUG = false
     let scrollContainer: HTMLDivElement
-    let messages = $state<any[]>([])
+    let messages = $state<Message[]>([])
     let prevPage = $state<string | null>(null)
     let nextPage = $state<string | null>(null)
     let loadIsThrottled = false
@@ -28,7 +33,7 @@
     const MSGCOUNT_MORE = 25
 
 
-    let preMessagesMapping = new Map<string, any>()  // id (current) -> message (previous)
+    let preMessagesMapping = new Map<string, Message>()  // id (current) -> message (previous)
 
     /**
      * ビューポート中央付近のメッセージIDを特定してlocalStorageに保存
@@ -238,7 +243,7 @@
                 -->
                 {#if !(prevPage && i === 0)}
                     <div class="message" data-messageid={message._id}>
-                        {@render snippetMessage(message, preMessagesMapping.get(message._id, null))}
+                        {@render snippetMessage(message, preMessagesMapping.get(message._id) ?? null)}
                     </div>
                 {/if}
             {/each}

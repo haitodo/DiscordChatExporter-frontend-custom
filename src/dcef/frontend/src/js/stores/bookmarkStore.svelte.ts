@@ -1,224 +1,165 @@
-import { getGuildState } from "./guildState.svelte";
+import type { Bookmark, Checkpoint, CompletedChannel, Message } from "../interfaces";
 
-// ブックマークリストのステート
-let bookmarksList = $state<any[]>([]);
+type ApiRequest = RequestInit & { method: "POST" | "PUT" | "PATCH" | "DELETE" };
 
-// チェックポイントマップのステート (キー: "guildId_channelId")
-let checkpointsMap = $state<Record<string, any>>({});
+let bookmarksList = $state<Bookmark[]>([]);
+let checkpointsMap = $state<Record<string, Checkpoint>>({});
+let completedChannelsMap = $state<Record<string, CompletedChannel>>({});
 
-// 読了完了チャンネルマップのステート (キー: "guildId_channelId")
-let completedChannelsMap = $state<Record<string, any>>({});
+function entityKey(guildId: string, channelId: string): string {
+    return `${guildId}_${channelId}`;
+}
 
-/**
- * すべてのブックマークをAPI経由でロードします。
- */
-export async function fetchBookmarks() {
+async function fetchList<T>(url: string): Promise<T[]> {
+    const response = await fetch(url);
+    if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+    }
+    return await response.json() as T[];
+}
+
+async function mutateAndRefresh(
+    url: string,
+    request: ApiRequest,
+    refresh: () => Promise<void>,
+    errorMessage: string,
+): Promise<void> {
     try {
-        const response = await fetch('/api/bookmarks');
-        if (response.ok) {
-            bookmarksList = await response.json();
+        const response = await fetch(url, request);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
         }
-    } catch (e) {
-        console.error("Failed to fetch bookmarks", e);
+        await refresh();
+    } catch (error) {
+        console.error(errorMessage, error);
     }
 }
 
-/**
- * 新しいブックマークを追加します。
- */
-export async function addBookmark(message: any, note = "") {
+export async function fetchBookmarks(): Promise<void> {
     try {
-        const response = await fetch('/api/bookmarks', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                guild_id: message.guildId,
-                channel_id: message.channelId,
-                message_id: message._id,
-                note
-            })
-        });
-        if (response.ok) {
-            await fetchBookmarks();
-        }
-    } catch (e) {
-        console.error("Failed to add bookmark", e);
+        bookmarksList = await fetchList<Bookmark>("/api/bookmarks");
+    } catch (error) {
+        console.error("Failed to fetch bookmarks", error);
     }
 }
 
-/**
- * ブックマークを削除します。
- */
-export async function deleteBookmark(guildId: string, messageId: string) {
+export async function addBookmark(message: Message, note = ""): Promise<void> {
+    await mutateAndRefresh("/api/bookmarks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            guild_id: message.guildId,
+            channel_id: message.channelId,
+            message_id: message._id,
+            note,
+        }),
+    }, fetchBookmarks, "Failed to add bookmark");
+}
+
+export async function deleteBookmark(guildId: string, messageId: string): Promise<void> {
+    await mutateAndRefresh(`/api/bookmarks/${guildId}/${messageId}`, {
+        method: "DELETE",
+    }, fetchBookmarks, "Failed to delete bookmark");
+}
+
+export async function updateBookmarkNote(guildId: string, messageId: string, note: string): Promise<void> {
+    await mutateAndRefresh(`/api/bookmarks/${guildId}/${messageId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ note }),
+    }, fetchBookmarks, "Failed to update bookmark note");
+}
+
+export async function fetchCheckpoints(): Promise<void> {
     try {
-        const response = await fetch(`/api/bookmarks/${guildId}/${messageId}`, {
-            method: 'DELETE'
-        });
-        if (response.ok) {
-            await fetchBookmarks();
-        }
-    } catch (e) {
-        console.error("Failed to delete bookmark", e);
+        const checkpoints = await fetchList<Checkpoint>("/api/checkpoints");
+        checkpointsMap = Object.fromEntries(
+            checkpoints.map(checkpoint => [
+                entityKey(checkpoint.guild_id, checkpoint.channel_id),
+                checkpoint,
+            ])
+        );
+    } catch (error) {
+        console.error("Failed to fetch checkpoints", error);
     }
 }
 
-/**
- * ブックマークのメモを更新します。
- */
-export async function updateBookmarkNote(guildId: string, messageId: string, note: string) {
+export async function setCheckpoint(guildId: string, channelId: string, messageId: string, timestamp: string): Promise<void> {
+    await mutateAndRefresh("/api/checkpoints", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            guild_id: guildId,
+            channel_id: channelId,
+            message_id: messageId,
+            timestamp,
+        }),
+    }, fetchCheckpoints, "Failed to set checkpoint");
+}
+
+export async function deleteCheckpoint(guildId: string, channelId: string): Promise<void> {
+    await mutateAndRefresh(`/api/checkpoints/${guildId}/${channelId}`, {
+        method: "DELETE",
+    }, fetchCheckpoints, "Failed to delete checkpoint");
+}
+
+export async function fetchCompletedChannels(): Promise<void> {
     try {
-        const response = await fetch(`/api/bookmarks/${guildId}/${messageId}`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ note })
-        });
-        if (response.ok) {
-            await fetchBookmarks();
-        }
-    } catch (e) {
-        console.error("Failed to update bookmark note", e);
+        const completedChannels = await fetchList<CompletedChannel>("/api/completed-channels");
+        completedChannelsMap = Object.fromEntries(
+            completedChannels.map(channel => [
+                entityKey(channel.guild_id, channel.channel_id),
+                channel,
+            ])
+        );
+    } catch (error) {
+        console.error("Failed to fetch completed channels", error);
     }
 }
 
-/**
- * すべての読了チェックポイントをロードします。
- */
-export async function fetchCheckpoints() {
-    try {
-        const response = await fetch('/api/checkpoints');
-        if (response.ok) {
-            const list = await response.json();
-            const map: Record<string, any> = {};
-            for (const cp of list) {
-                map[`${cp.guild_id}_${cp.channel_id}`] = cp;
-            }
-            checkpointsMap = map;
-        }
-    } catch (e) {
-        console.error("Failed to fetch checkpoints", e);
-    }
+export async function markChannelCompleted(guildId: string, channelId: string): Promise<void> {
+    await mutateAndRefresh("/api/completed-channels", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            guild_id: guildId,
+            channel_id: channelId,
+        }),
+    }, fetchCompletedChannels, "Failed to mark channel completed");
 }
 
-/**
- * チャンネルまたはスレッドの読了チェックポイントを設定します。
- */
-export async function setCheckpoint(guildId: string, channelId: string, messageId: string, timestamp: string) {
-    try {
-        const response = await fetch('/api/checkpoints', {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                guild_id: guildId,
-                channel_id: channelId,
-                message_id: messageId,
-                timestamp
-            })
-        });
-        if (response.ok) {
-            await fetchCheckpoints();
-        }
-    } catch (e) {
-        console.error("Failed to set checkpoint", e);
-    }
+export async function unmarkChannelCompleted(guildId: string, channelId: string): Promise<void> {
+    await mutateAndRefresh(`/api/completed-channels/${guildId}/${channelId}`, {
+        method: "DELETE",
+    }, fetchCompletedChannels, "Failed to unmark channel completed");
 }
 
-/**
- * 読了チェックポイントを削除します。
- */
-export async function deleteCheckpoint(guildId: string, channelId: string) {
-    try {
-        const response = await fetch(`/api/checkpoints/${guildId}/${channelId}`, {
-            method: 'DELETE'
-        });
-        if (response.ok) {
-            await fetchCheckpoints();
-        }
-    } catch (e) {
-        console.error("Failed to delete checkpoint", e);
-    }
-}
-
-/**
- * すべての読了完了チャンネルをAPI経由でロードします。
- */
-export async function fetchCompletedChannels() {
-    try {
-        const response = await fetch('/api/completed-channels');
-        if (response.ok) {
-            const list = await response.json();
-            const map: Record<string, any> = {};
-            for (const c of list) {
-                map[`${c.guild_id}_${c.channel_id}`] = c;
-            }
-            completedChannelsMap = map;
-        }
-    } catch (e) {
-        console.error("Failed to fetch completed channels", e);
-    }
-}
-
-/**
- * チャンネルまたはスレッドの読了完了マークを設定します。
- */
-export async function markChannelCompleted(guildId: string, channelId: string) {
-    try {
-        const response = await fetch('/api/completed-channels', {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                guild_id: guildId,
-                channel_id: channelId
-            })
-        });
-        if (response.ok) {
-            await fetchCompletedChannels();
-        }
-    } catch (e) {
-        console.error("Failed to mark channel completed", e);
-    }
-}
-
-/**
- * チャンネルまたはスレッドの読了完了マークを解除します。
- */
-export async function unmarkChannelCompleted(guildId: string, channelId: string) {
-    try {
-        const response = await fetch(`/api/completed-channels/${guildId}/${channelId}`, {
-            method: 'DELETE'
-        });
-        if (response.ok) {
-            await fetchCompletedChannels();
-        }
-    } catch (e) {
-        console.error("Failed to unmark channel completed", e);
-    }
-}
-
-/**
- * ブックマークストアのゲッターおよびヘルパー関数を返します。
- */
 export function getBookmarksStore() {
     return {
-        get bookmarks() {
+        get bookmarks(): Bookmark[] {
             return bookmarksList;
         },
-        get checkpoints() {
+        get checkpoints(): Record<string, Checkpoint> {
             return checkpointsMap;
         },
-        get completedChannels() {
+        get completedChannels(): Record<string, CompletedChannel> {
             return completedChannelsMap;
         },
-        isBookmarked(guildId: string, messageId: string) {
-            return bookmarksList.some(b => b.guild_id === guildId && b.message_id === messageId);
+        isBookmarked(guildId: string, messageId: string): boolean {
+            return bookmarksList.some(bookmark =>
+                bookmark.guild_id === guildId && bookmark.message_id === messageId
+            );
         },
-        getBookmark(guildId: string, messageId: string) {
-            return bookmarksList.find(b => b.guild_id === guildId && b.message_id === messageId);
+        getBookmark(guildId: string, messageId: string): Bookmark | undefined {
+            return bookmarksList.find(bookmark =>
+                bookmark.guild_id === guildId && bookmark.message_id === messageId
+            );
         },
-        getCheckpoint(guildId: string, channelId: string) {
-            return checkpointsMap[`${guildId}_${channelId}`];
+        getCheckpoint(guildId: string, channelId: string): Checkpoint | undefined {
+            return checkpointsMap[entityKey(guildId, channelId)];
         },
-        isCompleted(guildId: string, channelId: string) {
-            return completedChannelsMap[`${guildId}_${channelId}`] !== undefined;
-        }
+        isCompleted(guildId: string, channelId: string): boolean {
+            return completedChannelsMap[entityKey(guildId, channelId)] !== undefined;
+        },
     };
 }
