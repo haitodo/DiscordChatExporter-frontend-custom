@@ -97,6 +97,7 @@
         name: IconOptions;
         width: number;
         height?: number;
+        inline?: boolean;
     }
     let { name, width, height: inputHeight, inline=false }: MyProps = $props();
     let height = $derived(inputHeight ? inputHeight : width);

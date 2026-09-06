@@ -10,9 +10,9 @@
     type ChannelStartSnippet = Snippet<[message: Message]>;
 
     interface MyProps {
-        fetchMessages: (direction: ScrollDirection, messageId: string, limit: number) => Promise<MessagePage>
+        fetchMessages: (direction: ScrollDirection, messageId: string | null, limit: number) => Promise<MessagePage>
         snippetMessage: MessageSnippet
-        scrollToMessageId: string
+        scrollToMessageId: string | null
         emptySnippet?: Snippet<[]>
         channelStartSnippet?: ChannelStartSnippet
         channelOrThreadId?: string | null

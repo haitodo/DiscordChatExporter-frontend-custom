@@ -13,7 +13,7 @@
     import { getBookmarksStore } from "../js/stores/bookmarkStore.svelte";
 
     function destroyThreadView() {
-        guildState.changeThreadId(null)
+        guildState.changeThreadId(null, null)
         guildState.pushState()
     }
 
@@ -43,7 +43,7 @@
             {#if isDateDifferent(previousMessage, message)}
                 <DateSeparator messageId={message._id} />
             {/if}
-            {#if bookmarkStore.getCheckpoint(apiGuildId, apiThreadId)?.message_id === message._id}
+            {#if bookmarkStore.getCheckpoint(apiGuildId, apiThreadId ?? "")?.message_id === message._id}
                 <div class="checkpoint-separator">
                     <span class="checkpoint-line"></span>
                     <span class="checkpoint-tag">
@@ -90,7 +90,7 @@
             {#if layoutState.threadpinnedshown}
                 <div class="pin-messages">
                     {#key guildState.threadMessageId}
-                        <Pinned channelId={guildState.threadId} />
+                        <Pinned channelId={guildState.threadId ?? ""} />
                     {/key}
                 </div>
             {/if}

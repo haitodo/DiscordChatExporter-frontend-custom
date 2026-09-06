@@ -4,8 +4,10 @@
     import { copyTextToClipboard } from "../../js/helpers";
     import { getGuildState } from "../../js/stores/guildState.svelte";
     import Icon from "../icons/Icon.svelte";
+    import type { Category } from "../../js/interfaces";
 
-	let { category } = $props();
+	interface MyProps { category: Category; }
+	let { category }: MyProps = $props();
 
 	let isOpen = $state(function() {
         /** returns true if category is not closed */
@@ -35,7 +37,7 @@
 		localStorage.setItem('closedCategoryIds', json);
 	}
 
-    function onCategoryRightClick(e, id: string, name: string) {
+    function onCategoryRightClick(e: MouseEvent, id: string, name: string): void {
 		$contextMenuItems = [
             {
                 "name": isOpen ? "Collapse Category" : "Expand Category",

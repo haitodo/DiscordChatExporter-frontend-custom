@@ -14,17 +14,18 @@
 		const rect = menuEl.getBoundingClientRect();
 		x = Math.min(window.innerWidth - rect.width, x);
 		if (y > window.innerHeight - rect.height) y -= rect.height;
-	})(x, y);
+	})();
 
-	const dispatch = createEventDispatcher();
+	const dispatch = createEventDispatcher<{ click: void; clickoutside: void }>();
 
 	setContext(key, {
 		dispatchClick: () => dispatch('click')
 	});
 
 	let menuEl: HTMLElement;
-	function onPageClick(e) {
-        if (e.target.classList.contains("menu-option")) {
+	function onPageClick(e: MouseEvent): void {
+        const target = e.target instanceof Element ? e.target : null;
+        if (target?.classList.contains("menu-option")) {
             dispatch('clickoutside');
         }
         else {

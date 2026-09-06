@@ -43,7 +43,7 @@
             {#if isDateDifferent(previousMessage, message)}
                 <DateSeparator messageId={message._id} />
             {/if}
-            {#if bookmarkStore.getCheckpoint(apiGuildId, apiChannelId)?.message_id === message._id}
+            {#if bookmarkStore.getCheckpoint(apiGuildId, apiChannelId ?? "")?.message_id === message._id}
                 <div class="checkpoint-separator">
                     <span class="checkpoint-line"></span>
                     <span class="checkpoint-tag">

@@ -87,7 +87,7 @@
                         {#if count === 0}
                             No Results
                         {:else}
-                            {addCommas(count)} Results
+                            {typeof count === "number" ? addCommas(count) : count} Results
                         {/if}
                     {:catch error}
                         <p style="color: red">{error.message}</p>
@@ -97,7 +97,6 @@
             <div class="scrollwrapper" class:ismobile={layoutState.mobile}>
                 <InfiniteScroll3
                     fetchMessages={fetchMessagesWrapper}
-                    guildId={apiGuildId}
                     scrollToMessageId={"last"}
                     snippetMessage={renderMessageSnippet2}
                     emptySnippet={emptySnippet}

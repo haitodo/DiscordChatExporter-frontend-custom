@@ -11,7 +11,7 @@
     let apiGuildId = $derived(guildState.guildId ? guildState.guildId : "000000000000000000000000")
 
 	interface MyProps {
-        channelId: string[];
+        channelId: string;
     }
     let { channelId }: MyProps = $props();
 

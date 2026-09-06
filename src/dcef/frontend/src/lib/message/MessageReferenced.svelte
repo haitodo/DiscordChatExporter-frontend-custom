@@ -9,7 +9,7 @@
     import Icon from "../icons/Icon.svelte";
 
     export let message: Message
-    export let referencedMessage: Message
+    export let referencedMessage: Message | null | undefined
     export let messageState;
 
     const viewUserState = getViewUserState()

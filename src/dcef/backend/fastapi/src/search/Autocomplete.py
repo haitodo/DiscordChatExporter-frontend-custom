@@ -1,6 +1,20 @@
 import pymongo
+import re
 
 from ..common.Database import Database
+
+
+MAX_AUTOCOMPLETE_INPUT_LENGTH = 128
+MAX_AUTOCOMPLETE_LIMIT = 20
+
+
+def _safe_partial(value: str) -> str:
+	"""Treat autocomplete input as literal text and bound regex work."""
+	return re.escape((value or "")[:MAX_AUTOCOMPLETE_INPUT_LENGTH])
+
+
+def _safe_limit(limit: int) -> int:
+	return max(1, min(int(limit), MAX_AUTOCOMPLETE_LIMIT))
 
 
 def autocomplete_categories(guild_id: str, partial_category: str, limit: int):
@@ -9,6 +23,8 @@ def autocomplete_categories(guild_id: str, partial_category: str, limit: int):
 	limited to {limit} results * 10
 	"""
 	collection_channels = Database.get_guild_collection(guild_id, "channels")
+	partial_category = _safe_partial(partial_category)
+	limit = _safe_limit(limit)
 
 	# ignore "GuildPublicThread" or "GuildPrivateThread", because their category is channel name
 	query = {
@@ -62,6 +78,8 @@ def autocomplete_channels(guild_id: str, partial_channel: str, limit: int):
 	limited to {limit} results
 	"""
 	collection_channels = Database.get_guild_collection(guild_id, "channels")
+	partial_channel = _safe_partial(partial_channel)
+	limit = _safe_limit(limit)
 
 	query = {
 		"name": {
@@ -92,6 +110,8 @@ def autocomplete_reactions(guild_id: str, partial_reaction: str, limit: int):
 	limited to {limit} results
 	"""
 	collection_emojis = Database.get_guild_collection(guild_id, "emojis")
+	partial_reaction = _safe_partial(partial_reaction)
+	limit = _safe_limit(limit)
 
 	query = {
 		"name": {
@@ -126,6 +146,8 @@ def autocomplete_filenames(guild_id: str, partial_filename: str, limit: int):
 	limited to {limit} results
 	"""
 	collection_assets = Database.get_guild_collection(guild_id, "assets")
+	partial_filename = _safe_partial(partial_filename)
+	limit = _safe_limit(limit)
 
 	query = {
 		"searchable": True,
@@ -163,6 +185,8 @@ def autocomplete_extensions(guild_id: str, partial_extension: str, limit: int):
 	searches for file extensions
 	"""
 	collection_assets = Database.get_guild_collection(guild_id, "assets")
+	partial_extension = _safe_partial(partial_extension)
+	limit = _safe_limit(limit)
 
 	query = {
 		"searchable": True,
@@ -204,6 +228,8 @@ def autocomplete_users(guild_id: str, partial_user_name: str, limit: int):
 	only shows users that have messages in the guild {guild_id}
 	"""
 	collection_authors = Database.get_guild_collection(guild_id, "authors")
+	partial_user_name = _safe_partial(partial_user_name)
+	limit = _safe_limit(limit)
 	print("collection_authors", collection_authors)
 
 	denylisted_user_ids = Database.get_denylisted_user_ids()
@@ -250,6 +276,8 @@ def autocomplete_users(guild_id: str, partial_user_name: str, limit: int):
 	return authors
 
 def autocomplete_has(guild_id: str, partial_has: str, limit: int):
+	partial_has = (partial_has or "")[:MAX_AUTOCOMPLETE_INPUT_LENGTH].lower()
+	limit = _safe_limit(limit)
 	options = [
 		'link',
 		'embed',

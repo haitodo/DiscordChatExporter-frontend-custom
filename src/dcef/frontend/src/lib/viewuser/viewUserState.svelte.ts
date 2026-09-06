@@ -1,6 +1,6 @@
 import type { Author } from "../../js/interfaces";
 
-let user = $state(null);
+let user = $state<Author | null>(null);
 let shown = $state(false);
 
 export function getViewUserState() {

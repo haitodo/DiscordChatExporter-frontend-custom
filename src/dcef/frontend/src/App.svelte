@@ -30,7 +30,7 @@
       });
 
       const unsubscribe2 = hideSpoilers.subscribe(value => {
-        document.documentElement.setAttribute('data-hidespoilers', value);
+        document.documentElement.setAttribute('data-hidespoilers', String(value));
       });
 
       const unsubscribe3 = font.subscribe(value => {
@@ -63,7 +63,7 @@
     const layoutState = getLayoutState()
 
     /* capture mouse position for right click context menu */
-    function handleMousemove(event) {
+    function handleMousemove(event: MouseEvent): void {
       $position = { x: event.clientX, y: event.clientY };
     }
     const handleThrottledMousemove = throttle(handleMousemove, 100, { leading: false, trailing: true });

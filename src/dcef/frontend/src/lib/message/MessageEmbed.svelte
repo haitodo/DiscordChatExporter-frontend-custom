@@ -185,9 +185,9 @@
                     {#if twitchClipId}
                         <iframe
                             class="twitch-iframe"
-                            allow="autoplay" frameborder="0" scrolling="no" sandbox="allow-forms allow-modals allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts" provider="Twitch"
+                            allow="autoplay" frameborder="0" scrolling="no" sandbox="allow-forms allow-modals allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts" data-provider="Twitch"
                             src="https://clips.twitch.tv/embed?clip={twitchClipId}&parent={window.location.hostname}"
-                            width="400" height="232" allowfullscreen="">
+                            width="400" height="232" allowfullscreen>
                         </iframe>
                     {:else if youtubeId}
                         <!-- won't autoplay with sponsorblock browser extension for some reason -->

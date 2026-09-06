@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 	import Menu from './Menu.svelte';
     import { contextMenuItems } from '../../../js/stores/menuStore';
 
@@ -6,7 +6,7 @@
 		$contextMenuItems = [];
 	}
 
-	function onClick(item) {
+	function onClick(item: { name: string; action: () => void | Promise<void> }): void {
 		closeMenu()
 		item.action()
 	}

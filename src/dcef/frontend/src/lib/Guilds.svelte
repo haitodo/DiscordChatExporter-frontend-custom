@@ -7,7 +7,7 @@
     import { linkHandler } from "../js/stores/settingsStore.svelte";
     import Icon from "./icons/Icon.svelte";
 
-	function onRightClick(e, id) {
+	function onRightClick(e: MouseEvent, id: string): void {
 		$contextMenuItems = [
 			{
 				"name": `Open guild in discord ${$linkHandler === 'app' ? "app" : "web"}`,
@@ -44,7 +44,7 @@
 			{#if guild._id !== "000000000000000000000000"}
 				<div class="guild" on:contextmenu|preventDefault={e=>onRightClick(e, guild._id)} class:selected={guildState.guildId === guild._id} on:click={e => changeGuildId(guild._id)}>
 					<div class="guild-selected-indicator" />
-					<img src={checkUrl(guild.icon)} alt={guild.name} loading="lazy" on:error={e => (e.target.src = "/favicon.png")} />
+					<img src={checkUrl(guild.icon)} alt={guild.name} loading="lazy" on:error={e => ((e.currentTarget as HTMLImageElement).src = "/favicon.png")} />
 				</div>
 			{/if}
 		{/each}

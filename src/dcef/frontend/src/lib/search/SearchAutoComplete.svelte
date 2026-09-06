@@ -15,6 +15,10 @@
         focusInput: () => void;
         blurInput: () => void;
     }
+    interface DateOption {
+        display: string;
+        value: string;
+    }
     let { domInput, visible, focusInput, blurInput}: MyProps = $props();
 
     const searchState = getSearchState()
@@ -84,10 +88,10 @@
 
     let hasOptions: string[] = $state([])
 
-    let allDateOptions = $state([])
-    let dateOptions = $state([])
+    let allDateOptions = $state<DateOption[]>([])
+    let dateOptions = $state<DateOption[]>([])
     function generateDateOptions() {
-        function pad2(n) { return n < 10 ? '0' + n : n; }
+        function pad2(n: number): string { return n < 10 ? '0' + n : n.toString(); }
         const currentYear = new Date().getFullYear()
         const previousYear = currentYear - 1
         const currentMonth = new Date().getMonth() + 1
@@ -103,7 +107,7 @@
             }
         ]
 
-        const monthNames = {
+        const monthNames: Record<number, string> = {
             1: 'january',
             2: 'february',
             3: 'march',
@@ -163,7 +167,7 @@
         searchState.clearSearchHistory();
     }
 
-    async function selectFullSuggestion(suggestion: string): any {
+    async function selectFullSuggestion(suggestion: string): Promise<void> {
         const selection = searchState.selection;
         let newSearchPrompt = selection.textBefore
         if (selection.lastWord.length !== 0) {
@@ -192,7 +196,7 @@
         }, 0);
     }
 
-    function selectKeySuggestion(suggestion: string): any {
+    function selectKeySuggestion(suggestion: string): void {
         const selection = searchState.selection;
         console.log("selectKeySuggestion selection", selection);
         let newSearchPrompt = selection.textBefore
@@ -216,14 +220,14 @@
         searchState.setSearchPrompt(newSearchPrompt);
     }
 
-    async function selectAndSearch(searchTerm: string): Promise<any> {
+    async function selectAndSearch(searchTerm: string): Promise<void> {
         console.log("searching for", searchTerm);
         await guildState.changeThreadId(null)
         searchState.setSearchPrompt(searchTerm)
         searchState.search(guildState.guildId)
         searchState.addToSearchHistory(searchTerm)
     }
-    function restoreFocus(): any {
+    function restoreFocus(): void {
         // domInput.focus();
         focusInput();
     }

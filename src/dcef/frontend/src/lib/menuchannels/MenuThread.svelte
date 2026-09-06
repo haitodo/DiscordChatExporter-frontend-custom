@@ -23,7 +23,7 @@
     const isCompleted = $derived(bookmarkStore.isCompleted(thread.guildId, thread._id) || (progressPercent !== null && progressPercent === 100));
 
 
-    function onThreadRightClick(e, id: string, name: string) {
+    function onThreadRightClick(e: MouseEvent, id: string, name: string): void {
 		$contextMenuItems = [
             {
                 "name": isCompleted ? "✖ 読了完了マークを解除" : "✔ 読了完了としてマーク",
@@ -38,7 +38,7 @@
             {
 				"name": `Open thread in discord ${$linkHandler === 'app' ? "app" : "web"}`,
 				"action": () => {
-					window.open(($linkHandler === "app" ? "discord://" : "") + `https://discord.com/channels/${BigInt(guildState.guildId)}/${BigInt(id)}`,'_blank')
+					window.open(($linkHandler === "app" ? "discord://" : "") + `https://discord.com/channels/${BigInt(guildState.guildId ?? "000000000000000000000000")}/${BigInt(id)}`,'_blank')
 				}
 			},
 			{

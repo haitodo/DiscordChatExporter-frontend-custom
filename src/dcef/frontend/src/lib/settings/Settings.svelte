@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
     import { nameRenderer, startingDayOfTheWeek, developerMode, theme, online, gifs, linkHandler, channelScrollPosition, hideSpoilers, font, sidebarFontSize, mainThreadFontSize, replyThreadFontSize, timestampFormat, dateFormat, timeFormat, locale, jumpToMessageAnimated} from '../../js/stores/settingsStore.svelte';
     import { dateFormats, timeFormats, formatMoment, browserLocales } from '../../js/time';
     import RadioButton from './RadioButton.svelte';
@@ -9,7 +9,7 @@
     let testDate = '2020-01-16T11:04:47.215+00:00';
     let selectedTab = 'appearance';
 
-    function selectTab(tab) {
+    function selectTab(tab: string): void {
         selectedTab = tab;
         layoutState.hideSettingsSideMenu()
     }

@@ -3,27 +3,28 @@
     import { getViewUserState } from './viewUserState.svelte';
 
     const viewUserState = getViewUserState()
+    const user = $derived(viewUserState.user)
 </script>
 
 
 
-{#if viewUserState.shown}
+{#if viewUserState.shown && user}
     <div class="gallery-wrapper" on:click={()=>viewUserState.setUser(null)}>
         <div class="gallery-closebtn" on:click={()=>viewUserState.setUser(null)}>&times;</div>
         <div id="profile" on:click|stopPropagation>
-            <Image asset={viewUserState.user?.avatar} class="profile-avatar" />
+            <Image asset={user.avatar} class="profile-avatar" />
             <div class="profile-background"></div>
 
             <div class="profile-inner">
                 <div class="profile-header">
-                    <div class="profile-nickname">{viewUserState.user.nickname}</div>
-                    <div class="profile-name">{viewUserState.user.name}</div>
+                    <div class="profile-nickname">{user.nickname}</div>
+                    <div class="profile-name">{user.name}</div>
                 </div>
                 <div class="profile-scroll">
                     <div class="mini-title">ROLES</div>
                     <div class="roles-wrapper">
-                        {#if viewUserState.user.roles}
-                            {#each viewUserState.user.roles as role}
+                        {#if user.roles}
+                            {#each user.roles as role}
                                 <div class="role">
                                     <div class="role-color" style={`background-color: ${role.color ?? "#c4c9ce"};`}></div>
                                     <div class="role-name">{role.name}</div>

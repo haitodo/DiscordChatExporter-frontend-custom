@@ -5,6 +5,13 @@
     interface MyProps {
         chooseDate: (dateSring: string) => void;
     }
+    interface CalendarDay {
+        date: string;
+        day: number;
+        isThisMonth: boolean;
+        isToday: boolean;
+        isInFuture: boolean;
+    }
     let { chooseDate }: MyProps = $props();
 
     const currentYear = new Date().getFullYear();
@@ -15,13 +22,14 @@
 
     startingDayOfTheWeek
 
-    const daysAbbreviations = $derived.by(() => {
+    const daysAbbreviations = $derived.by((): string[] => {
         if ($startingDayOfTheWeek === SUNDAY) return ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'];
         if ($startingDayOfTheWeek === MONDAY) return ['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU'];
+        return ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'];
     });
 
 
-    function getDaysCount(year, month) {
+    function getDaysCount(year: number, month: number): number {
         return new Date(year, month, 0).getDate();
     }
 
@@ -42,19 +50,19 @@
     let thisMonthDaysCount = $derived(getDaysCount(selectedYear, selectedMonth));
     let dayOfTheWeek = $derived(new Date(selectedYear, selectedMonth - 1, 1).getDay());  // 0 is Sunday, for first day of the week
 
-    function pad2(n) { return n < 10 ? '0' + n : n; }
+    function pad2(n: number): string { return n < 10 ? '0' + n : n.toString(); }
 
-    function isInFuture(dateString) {
+    function isInFuture(dateString: string): boolean {
         return new Date(dateString) > new Date() && dateString !== `${currentYear}-${pad2(currentMonth)}-${pad2(new Date().getDate())}`;
     }
 
-    function isToday(dateString) {
+    function isToday(dateString: string): boolean {
         return dateString === `${currentYear}-${pad2(currentMonth)}-${pad2(new Date().getDate())}`;
     }
 
     let calendarRows = $derived.by(() => {
-        let rows = [];
-        let row = [];
+        let rows: CalendarDay[][] = [];
+        let row: CalendarDay[] = [];
 
         // push days from previous month if day of the week is not 0
         for (let i = dayOfTheWeek - $startingDayOfTheWeek; i > 0; i--) {

@@ -167,8 +167,6 @@
     <div
         class="mediaprogress-wrapper"
         bind:this={mediaProgress}
-        value={currentTime ? currentTime : 0}
-        max={duration}
         style=""
         onmousedown={() => seekingMedia = true}
         onmouseenter={() => mouseOverMediaBar = true}

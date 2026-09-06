@@ -20,7 +20,7 @@ for (let lang of navigator.languages) {
     let m = moment(new Date()).locale(lang);
 
     for (let format_str of ['L', 'l', 'LL', 'll']) {
-        let format = m.localeData().longDateFormat(format_str)
+        let format = m.localeData().longDateFormat(format_str as any)
         if (!dateFormats.includes(format)) {
             dateFormats.push(format)
         }
@@ -40,20 +40,20 @@ export let timeFormats = [
 
 
 
-export function formatMoment(date, format) {
+export function formatMoment(date: moment.MomentInput, format: string): string {
     moment.locale(get(locale));
     return moment(date).format(format);
 }
 
-export function renderDate(date) {
+export function renderDate(date: moment.MomentInput): string {
     return formatMoment(date, get(dateFormat));
 }
 
-export function renderTime(date) {
+export function renderTime(date: moment.MomentInput): string {
     return formatMoment(date, get(timeFormat));
 }
 
-export function renderTimestamp(date) {
+export function renderTimestamp(date: moment.MomentInput): string {
     return renderDate(date) + ' ' + renderTime(date);
 }
 

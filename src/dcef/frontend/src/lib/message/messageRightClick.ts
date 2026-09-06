@@ -6,7 +6,7 @@ import { linkHandler, setCurrentUser } from "../../js/stores/settingsStore.svelt
 import { getBookmarksStore, addBookmark, deleteBookmark, setCheckpoint } from "../../js/stores/bookmarkStore.svelte"
 
 
-export function onUserRightClick(e, author: Author) {
+export function onUserRightClick(e: MouseEvent, author: Author): void {
     contextMenuItems.set([
         {
             "name": "View discord as this user",
@@ -24,7 +24,7 @@ export function onUserRightClick(e, author: Author) {
 }
 
 
-export function onMessageRightClick(e, message: Message) {
+export function onMessageRightClick(e: MouseEvent, message: Message): void {
     const bookmarkStore = getBookmarksStore();
     const isBookmarked = bookmarkStore.isBookmarked(message.guildId, message._id);
 
@@ -76,4 +76,4 @@ export function onMessageRightClick(e, message: Message) {
             }
         }
     ])
-}
+}

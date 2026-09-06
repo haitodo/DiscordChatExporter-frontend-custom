@@ -33,7 +33,25 @@ hljs.registerLanguage('rust', rust);
 hljs.registerLanguage('go', go);
 
 import { twemojiToFilename } from './emojis/twemojiToFilename';
-import type { Asset } from './interfaces';
+import type { Asset, Channel, Emoji, Mention, Role } from './interfaces';
+
+const twemojiFilenameMap = twemojiToFilename as Record<string, string>;
+
+interface MarkdownState {
+    searchTerms: string[];
+    mentions: Mention[];
+    emotes: Emoji[];
+    roles: Role[];
+    channels: Channel[];
+    onlyOffline: boolean;
+}
+
+interface MarkdownRule {
+    order: number;
+    match: (source: string, state: MarkdownState, lookbehind: string) => RegExpExecArray | null;
+    parse: (capture: RegExpExecArray, recurseParse: (...args: any[]) => any, state: MarkdownState) => any;
+    html: (node: any, recurseOutput: (...args: any[]) => any, state: MarkdownState) => string;
+}
 
 export function escapeRegExp(string: string) {
     // https://stackoverflow.com/a/6969486
@@ -78,7 +96,7 @@ const ASSET_ICON = `<svg style="width:1rem;height:1rem;vertical-align: middle;ma
 // new roles
 // <@&878787663080666078>
 
-const newRole = {
+const newRole: MarkdownRule = {
     order: SimpleMarkdown.defaultRules.text.order - 0.5,
     match: function(source, state, lookbehind) {
         return /^<@&(\d{17,24})>/.exec(source);
@@ -113,13 +131,13 @@ const newRole = {
 
 // old mentions
 
-const oldMention = {
+const oldMention: MarkdownRule = {
     order: SimpleMarkdown.defaultRules.text.order - 0.49,
     match: function(source, state, lookbehind) {
         if (state.mentions.length === 0) {
             return null;
         }
-        let searchTerms = state.mentions.map((term: string) => escapeRegExpForOrSearch(term.nickname));
+        let searchTerms = state.mentions.map((term: Mention) => escapeRegExpForOrSearch(term.nickname));
         return new RegExp(`^@(${searchTerms.join("|")})`, 'i').exec(source);
     },
     parse: function(capture, recurseParse, state) {
@@ -137,7 +155,7 @@ const oldMention = {
 // new mentions
 // <@123>
 
-const newMention = {
+const newMention: MarkdownRule = {
     order: SimpleMarkdown.defaultRules.text.order - 0.48,
     match: function(source, state, lookbehind) {
         return /^<@!?(\d{17,24})>/.exec(source);
@@ -168,7 +186,7 @@ const newMention = {
 // new channels
 // <#123>
 
-const newChannel = {
+const newChannel: MarkdownRule = {
     order: SimpleMarkdown.defaultRules.text.order - 0.48,
     match: function(source, state, lookbehind) {
         return /^<#(\d{17,24})>/.exec(source);
@@ -214,7 +232,7 @@ const newChannel = {
 // Long Date/Time   <t:1543392060:F>  Wednesday, November 28, 2018 9:01 AM  Wednesday, 28 November 2018 09:01
 // Relative Time    <t:1543392060:R>  3 years ago                           3 years ago
 
-const timestamp = {
+const timestamp: MarkdownRule = {
   order: SimpleMarkdown.defaultRules.text.order - 0.6,
   match: function(source, state, lookbehind) {
       return /^<t:(\d{1,10})(?::([tTdfFR]))?>/.exec(source);
@@ -235,7 +253,7 @@ const timestamp = {
 // message links
 // https://discord.com/channels/123/456/789
 
-const messageLink = {
+const messageLink: MarkdownRule = {
   order: SimpleMarkdown.defaultRules.autolink.order - 0.5,
   match: function(source, state, lookbehind) {
       return /^https:\/\/discord(?:app)?\.com\/channels\/(\d{17,24})\/(\d{17,24})\/(\d{17,24})/.exec(source);
@@ -258,7 +276,7 @@ const messageLink = {
 // channel links
 // https://discord.com/channels/123/456
 
-const channelLink = {
+const channelLink: MarkdownRule = {
   order: SimpleMarkdown.defaultRules.autolink.order - 0.4,
   match: function(source, state, lookbehind) {
       return /^https:\/\/discord(?:app)?\.com\/channels\/(\d{17,24})\/(\d{17,24})/.exec(source);
@@ -281,7 +299,7 @@ const channelLink = {
 // https://cdn.discordapp.com/attachments/12345678900000000/12345678900000000/image.png?ex=658f3e1d&is=657cc91d&hm=b32dbaf1dc2a47ccc2d547e1ec0aedc1ba51e9a8ce4137acf4fb98c84ede4cb8&
 // https://media.discordapp.net/attachments/12345678900000000/12345678900000000/image.png?ex=658f3e1d&is=657cc91d&hm=b32dbaf1dc2a47ccc2d547e1ec0aedc1ba51e9a8ce4137acf4fb98c84ede4cb8&
 
-const assetLink = {
+const assetLink: MarkdownRule = {
   order: SimpleMarkdown.defaultRules.autolink.order - 0.39,
   match: function(source, state, lookbehind) {
       return /^https:\/\/(?:media\.discordapp\.net|cdn\.discordapp\.com)\/attachments\/\d{17,24}\/\d{17,24}\/([^ \n\?]+)(?:\?[^ \n]+)?/.exec(source);
@@ -304,7 +322,7 @@ const assetLink = {
 // ### Heading
 // more than 3 # are not supported by discord
 
-const customHeading = {
+const customHeading: MarkdownRule = {
   order: SimpleMarkdown.defaultRules.heading.order - 0.1,
   match: function(source, state, lookbehind) {
     // previous match must not end with #
@@ -329,13 +347,13 @@ const customHeading = {
 // old emojis
 // :kekw:
 
-const oldEmoji = {
+const oldEmoji: MarkdownRule = {
   order: SimpleMarkdown.defaultRules.autolink.order - 0.31,
   match: function(source, state, lookbehind) {
       if (state.emotes.length === 0) {
           return null;
       }
-      let searchTerms = state.emotes.map((term: string) => escapeRegExpForOrSearch(term.name));
+      let searchTerms = state.emotes.map((term: Emoji) => escapeRegExpForOrSearch(term.name));
       return new RegExp(`^:(${searchTerms.join("|")}):`, 'i').exec(source);
   },
   parse: function(capture, recurseParse, state) {
@@ -382,7 +400,7 @@ function openInGalleryTemplate(asset: Asset) {
 // <:kekw:782589696621805568>
 // <a:kekw:782589696621805568>
 
-const newEmoji = {
+const newEmoji: MarkdownRule = {
   order: SimpleMarkdown.defaultRules.autolink.order - 0.3,
   match: function(source, state, lookbehind) {
       return /^<(a)?:(\w{2,32}):(\d{17,24})>/.exec(source);
@@ -429,7 +447,7 @@ const newEmoji = {
 // text spoiler
 // ||spoiler||
 
-const textSpoiler = {
+const textSpoiler: MarkdownRule = {
   order: SimpleMarkdown.defaultRules.text.order - 0.2,
   match: function(source, state, lookbehind) {
       return /^\|\|(.+?)\|\|/.exec(source);
@@ -447,7 +465,7 @@ const textSpoiler = {
 
 
 
-const twemoji = {
+const twemoji: MarkdownRule = {
     order: SimpleMarkdown.defaultRules.text.order - 0.15,
     match: function(source, state, lookbehind) {
         return /^(:[a-zA-Z0-9_]+:)/.exec(source);
@@ -456,7 +474,7 @@ const twemoji = {
         return {
             type: 'twemoji',
             content: capture[1],
-            twemojiFilename: twemojiToFilename[capture[1]],  // twemojiToFilename - key is :emojiname:, value is filename without `.svg`
+            twemojiFilename: twemojiFilenameMap[capture[1]],  // twemojiToFilename - key is :emojiname:, value is filename without `.svg`
         };
     },
     html: function(node, recurseOutput, state) {
@@ -470,7 +488,7 @@ const twemoji = {
 
 // highlight search terms from search results (state.searchTerms)
 
-const highlightSearchTerms = {
+const highlightSearchTerms: MarkdownRule = {
   order: SimpleMarkdown.defaultRules.text.order - 0.1,
   match: function(source, state, lookbehind) {
     // escaping regex is needed to prevent infinite loops
@@ -498,7 +516,7 @@ parse: function(capture, recurseParse, state) {
 // code
 // ```
 
-const codeBlock = {
+const codeBlock: MarkdownRule = {
     order: SimpleMarkdown.defaultRules.codeBlock.order - 0.2,
     match: function(source, state, lookbehind) {
         return /^```([a-z0-9]*)\n([\s\S]*?)\n?```/.exec(source);
@@ -531,7 +549,7 @@ const codeBlock = {
 // ```private void main() {
 // code
 // }```
-const badlyFormattedCodeBlock = {
+const badlyFormattedCodeBlock: MarkdownRule = {
     order: SimpleMarkdown.defaultRules.codeBlock.order - 0.1,
     match: function(source, state, lookbehind) {
         return /^```([\s\S]*?\n[\s\S]*?)```/.exec(source);
@@ -605,13 +623,13 @@ export const rules = {
     text: SimpleMarkdown.defaultRules.text,
 };
 
-const parse = SimpleMarkdown.parserFor(rules);
+const parse = SimpleMarkdown.parserFor(rules as any);
 var htmlOutput = SimpleMarkdown.outputFor(rules, 'html');
 
 
 
 
-export function parseMarkdown(input: string, state: any) {
+export function parseMarkdown(input: string, state: MarkdownState) {
     let tree = parse(input, state);
     return {
         tree: tree,

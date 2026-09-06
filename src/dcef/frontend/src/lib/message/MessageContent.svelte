@@ -1,8 +1,8 @@
 <script lang="ts">
-    import Message from "./Message.svelte";
+    import type { Message as MessageData } from "../../js/interfaces";
     import MessageMarkdown from "./MessageMarkdown.svelte";
 
-    export let message: Message[]
+    export let message: MessageData
 </script>
 
 <MessageMarkdown content={message.content[0].content} emotes={message?.emotes || []} mentions={message?.mentions || []} roles={message?.roles || []} channels={message?.channels || []} />

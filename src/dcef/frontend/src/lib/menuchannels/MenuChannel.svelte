@@ -65,7 +65,7 @@
             {
 				"name": `Open channel in discord ${$linkHandler === 'app' ? "app" : "web"}`,
 				"action": () => {
-					window.open(($linkHandler === "app" ? "discord://" : "") + `https://discord.com/channels/${BigInt(guildState.guildId)}/${BigInt(id)}`,'_blank')
+					window.open(($linkHandler === "app" ? "discord://" : "") + `https://discord.com/channels/${BigInt(guildState.guildId ?? "000000000000000000000000")}/${BigInt(id)}`,'_blank')
 				}
 			},
 			{

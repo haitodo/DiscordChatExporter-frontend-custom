@@ -3540,7 +3540,7 @@ let dceToTwemojiUnordered = {
 }
 
 // sort by longest key first, so the longer sequences are matched first
-export let dceToTwemoji = Object.keys(dceToTwemojiUnordered).sort((a, b) => b.length - a.length).reduce((acc, key) => {
-    acc[key] = dceToTwemojiUnordered[key];
+export let dceToTwemoji: Record<string, string> = Object.keys(dceToTwemojiUnordered).sort((a, b) => b.length - a.length).reduce<Record<string, string>>((acc, key) => {
+	acc[key] = (dceToTwemojiUnordered as Record<string, string>)[key];
     return acc;
 }, {});

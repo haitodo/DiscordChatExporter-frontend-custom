@@ -1,13 +1,13 @@
 <script lang="ts">
     import Image from '../imagegallery/Image.svelte';
     import { onUserRightClick } from './messageRightClick';
-	export let reactions
-
+    import type { Author, Reaction } from '../../js/interfaces';
     let showReactions = false;
 
-    let activeReaction
+    export let reactions: Reaction[];
+    let activeReaction: Reaction | null = null;
 
-    export function viewReactions(reaction) {
+    export function viewReactions(reaction: Reaction): void {
         activeReaction = reaction;
         console.log("activeReaction", activeReaction);
         showReactions = true;
@@ -36,9 +36,9 @@
             </div>
             <div class="reaction-users">
 
-                {#if activeReaction.users}
+                {#if activeReaction?.users}
                     {#each activeReaction.users as user}
-                        <div class="reaction-user" on:contextmenu|preventDefault|preventDefault={e=>onUserRightClick(e, user)}>
+                        <div class="reaction-user" on:contextmenu|preventDefault|preventDefault={e=>onUserRightClick(e, user as Author)}>
                             <Image
                                 class="global-reaction-user-img"
                                 alt={user.name}

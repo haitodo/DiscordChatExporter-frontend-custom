@@ -134,7 +134,7 @@ export interface MessageContent {
 
 export interface Message {
 	_id: string;
-	type: "Default" | "RecipientAdd" | "RecipientRemove" | "Call" | "ChannelNameChange" | "ChannelIconChange" | "ChannelPinnedMessage" | "GuildMemberJoin" | "ThreadCreated" | "Reply" | "24";
+	type: "Default" | "RecipientAdd" | "RecipientRemove" | "Call" | "ChannelNameChange" | "ChannelIconChange" | "ChannelPinnedMessage" | "GuildMemberJoin" | "ThreadCreated" | "Reply" | "24" | "8" | "9" | "10" | "11";
 	timestamp: string;
 	timestampEdited: string | null;
 	callEndedTimestamp: string | null;
@@ -142,15 +142,19 @@ export interface Message {
 	content: MessageContent[];
 	author: Author;
 	stickers: Sticker[] | null;
-	reactions: Emoji[] | null;
-	emotes: Reaction[] | null;   // emotes in the message
+	reactions: Reaction[] | null;
+	emotes: Emoji[] | null;   // emotes in the message
 	mentions: Mention[] | null;
+	roles?: Role[];
+	channels?: Channel[];
+	isDeleted?: boolean;
 	attachments: Asset[] | null;
 	embeds: Embed[] | null;
 	reference: {
 		messageId: string;
 		channelId: string;
 		guildId: string;
+		message?: Message;
 	} | null;
 	guildId: string;
 	channelId: string;

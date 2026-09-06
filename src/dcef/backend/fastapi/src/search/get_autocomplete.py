@@ -1,4 +1,6 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
+
+from .Autocomplete import MAX_AUTOCOMPLETE_INPUT_LENGTH, MAX_AUTOCOMPLETE_LIMIT
 from ..common.helpers import pad_id
 from . import Autocomplete
 
@@ -9,7 +11,12 @@ router = APIRouter(
 
 
 @router.get("/guild/search/autocomplete")
-def search_autocomplete(guild_id: str, key: str = None, value: str = None, limit: int = 100):
+def search_autocomplete(
+	guild_id: str,
+	key: str = Query(default=None),
+	value: str = Query(default=None, max_length=MAX_AUTOCOMPLETE_INPUT_LENGTH),
+	limit: int = Query(default=MAX_AUTOCOMPLETE_LIMIT, ge=1, le=MAX_AUTOCOMPLETE_LIMIT),
+):
 	if (key == None or value == None):
 		return []
 

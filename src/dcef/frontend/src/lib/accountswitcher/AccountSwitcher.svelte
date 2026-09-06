@@ -20,7 +20,7 @@
         <Icon name="other/settings" width={20} />
     </div>
 </div>
-<UserSelectionModal bind:showModal={showUserSelectionModal} guildId={guildState.guildId}/>
+<UserSelectionModal bind:showModal={showUserSelectionModal} guildId={guildState.guildId ?? "000000000000000000000000"}/>
 
 <style>
     #settings {

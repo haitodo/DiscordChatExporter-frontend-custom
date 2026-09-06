@@ -7,7 +7,7 @@ from dateutil.relativedelta import relativedelta
 from ..common.cursor_pagination import cursor_pagination
 
 from ..common.enrich_messages import enrich_messages_with_referenced
-from ..common.helpers import pad_id, print_json
+from ..common.helpers import pad_id
 from ..common.Database import Database
 
 from fastapi import APIRouter, Query
@@ -19,6 +19,11 @@ router = APIRouter(
 	prefix="",
 	tags=["search"]
 )
+
+MAX_SEARCH_PROMPT_LENGTH = 512
+MAX_SEARCH_TERM_LENGTH = 128
+MAX_SEARCH_TERMS = 20
+MAX_PAGE_SIZE = 100
 
 
 SEARCH_CATEGORIES = []
@@ -82,7 +87,7 @@ def parse_prompt(prompt: str):
 
 	searchCategoriesMap = {x["key"]: x for x in SEARCH_CATEGORIES}
 
-	stripped_prompt = prompt.strip() + " "
+	stripped_prompt = (prompt or "")[:MAX_SEARCH_PROMPT_LENGTH].strip() + " "
 
 	for i, char in enumerate(stripped_prompt):
 		# ignore escaped quote
@@ -195,9 +200,12 @@ def parse_prompt(prompt: str):
 
 		word += char
 
-	print("search")
-	print_json(search)
 	return search
+
+
+def _safe_regex_terms(terms: list) -> list:
+	"""Convert user search terms into bounded literal regex fragments."""
+	return [re.escape(str(term)[:MAX_SEARCH_TERM_LENGTH]) for term in terms[:MAX_SEARCH_TERMS]]
 
 
 def category_names_to_ids(in_category_ids: list, in_categories: list, guild_id: str):
@@ -281,8 +289,9 @@ def extend_reactions(reaction_ids: list, reactions: list, guild_id: str):
 	reaction_ids = reaction_ids.copy()
 
 	or_ = []
-	for reaction in reactions:
-		or_.append({"name": {"$regex": f"^{reaction}$", "$options": "i"}})
+	for reaction in reactions[:MAX_SEARCH_TERMS]:
+		reaction_pattern = re.escape(str(reaction)[:MAX_SEARCH_TERM_LENGTH])
+		or_.append({"name": {"$regex": f"^{reaction_pattern}$", "$options": "i"}})
 
 	query = {"$or": or_}
 
@@ -321,11 +330,11 @@ def extend_users(user_ids: list, usernames: list, guild_id: str):
 
 
 @router.get("/guild/search")
-async def search_messages(guild_id: str, prompt: str = None, prev_page_cursor: str | None = None, around_page_cursor: str | None = None, next_page_cursor: str | None = None, limit=100):
+async def search_messages(guild_id: str, prompt: str = Query(default=None, max_length=MAX_SEARCH_PROMPT_LENGTH), prev_page_cursor: str | None = None, around_page_cursor: str | None = None, next_page_cursor: str | None = None, limit: int = Query(default=100, ge=1, le=MAX_PAGE_SIZE)):
 	return await search_messages_(guild_id, prompt, prev_page_cursor, around_page_cursor, next_page_cursor, limit, return_count=False)
 
 @router.get("/guild/search/count")
-async def count_messages(guild_id: str, prompt: str = None):
+async def count_messages(guild_id: str, prompt: str = Query(default=None, max_length=MAX_SEARCH_PROMPT_LENGTH)):
 	return await search_messages_(guild_id, prompt, prev_page_cursor=None, around_page_cursor=None, next_page_cursor=None, limit=0, return_count=True)
 
 
@@ -375,7 +384,7 @@ async def search_messages_(guild_id: str, prompt: str = None, prev_page_cursor: 
 		after = search["after"]
 
 		# clean up
-		message_contains = [word.lower() for word in message_contains]
+		message_contains = _safe_regex_terms(message_contains)
 		message_ids = [pad_id(id) for id in message_ids]
 
 		denylisted_user_ids = Database.get_denylisted_user_ids()
@@ -392,7 +401,7 @@ async def search_messages_(guild_id: str, prompt: str = None, prev_page_cursor: 
 		mentions_user_ids = [user_id for user_id in mentions_user_ids if user_id not in denylisted_user_ids]    # remove denylisted users
 
 		reaction_ids = [pad_id(id) for id in reaction_ids]
-		reactions = [reaction.lower() for reaction in reactions]
+		reactions = [reaction[:MAX_SEARCH_TERM_LENGTH].lower() for reaction in reactions[:MAX_SEARCH_TERMS]]
 		reaction_ids = extend_reactions(reaction_ids, reactions, guild_id)
 		extensions = [ext.lower() for ext in extensions]
 		in_channel_ids = channel_names_to_ids(in_channel_ids, in_channels, guild_id)
@@ -452,7 +461,7 @@ async def search_messages_(guild_id: str, prompt: str = None, prev_page_cursor: 
 			# case insensitive search
 			# match partial filenames
 			or_ = []
-			for filename in filenames:
+			for filename in _safe_regex_terms(filenames):
 				or_.append({"attachments.filenameWithoutHash": {"$regex": filename, "$options": "i"}})
 				or_.append({"embeds.thumbnail.filenameWithoutHash": {"$regex": filename, "$options": "i"}})
 
@@ -578,9 +587,6 @@ async def search_messages_(guild_id: str, prompt: str = None, prev_page_cursor: 
 
 		if len(query["$and"]) == 0:
 			query.pop("$and")
-
-		print("query")
-		print_json(query)
 
 		if return_count:
 			return collection_messages.count_documents(query)

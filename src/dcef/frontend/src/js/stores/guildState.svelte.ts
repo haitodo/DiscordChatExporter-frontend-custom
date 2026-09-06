@@ -3,16 +3,26 @@ import { isObjectEqual } from "../helpers";
 import { fetchCategoriesChannelsThreads, fetchGuilds } from "./api";
 import { getLayoutState } from "./layoutState.svelte";
 import { saveSessionState, getSessionState, getScrollMessageId } from "./sessionStore";
-import type { Category } from "../interfaces";
+import type { Category, Channel, ChannelWithThreads } from "../interfaces";
+
+interface UrlState {
+	[key: string]: string | null | undefined;
+	guild: string | null;
+	channel: string | null;
+	thread: string | null;
+	channelmessage: string | null;
+	threadmessage: string | null;
+	search: string | null;
+}
 
 let guilds = $state(await fetchGuilds());
-let guildId = $state("nonExistingGuildId");  // will be changed before the first load
+let guildId = $state<string | null>("nonExistingGuildId");  // will be changed before the first load
 let guild = $derived(guilds.find(g => g._id === guildId) || null);
 
 let channelId: string | null = $state(null);
 let categories = $state<Category[]>([]);
 let channel = $derived(categories.flatMap(c => c.channels).find(c => c._id === channelId) || null);
-let channelMessageId = $state(null);
+let channelMessageId = $state<string | null>(null);
 
 let threadId: string | null  = $state(null);
 let thread = $derived(categories.flatMap(c => c.channels).flatMap(c => c.threads).find(t => t._id === threadId) || null);
@@ -20,13 +30,13 @@ let threadMessageId: string | null  = $state(null);
 
 // fast lookups:
 // key is channelId, value is channel object
-let channelsLookup = $derived.by(() => categories.flatMap(c => c.channels).reduce((acc, channel) => {
+let channelsLookup = $derived.by(() => categories.flatMap(c => c.channels).reduce<Record<string, ChannelWithThreads>>((acc, channel) => {
 	acc[channel._id] = channel
 	return acc
 }, {}));
 
 // key is threadId, value is thread object
-let threadsLookup = $derived.by(() => categories.flatMap(c => c.channels).flatMap(c => c.threads).reduce((acc, thread) => {
+let threadsLookup = $derived.by(() => categories.flatMap(c => c.channels).flatMap(c => c.threads).reduce<Record<string, Channel>>((acc, thread) => {
 	acc[thread._id] = thread
 	return acc
 }, {}));
@@ -84,9 +94,9 @@ export function getGuildState() {
 		}
 	}
 
-	function getUrlState() {
+	function getUrlState(): UrlState {
 		const urlParams = new URLSearchParams(window.location.search)
-		let state = {
+		let state: UrlState = {
 			guild: urlParams.get("guild") || null,
 			channel: urlParams.get("channel") || null,
 			thread: urlParams.get("thread") || null,
@@ -110,11 +120,11 @@ export function getGuildState() {
 	/**
 	 * Convert the state object to a query string
 	 */
-	function stateToParams(state) {
-		let nonNullState: any = {}  // pretty url without null values
+	function stateToParams(state: UrlState): string {
+		const nonNullState: Record<string, string> = {};  // pretty url without null values
 		for (const key in state) {
 			if (state[key] !== null && state[key] !== undefined) {
-				nonNullState[key] = state[key]
+				nonNullState[key] = String(state[key]);
 			}
 		}
 		const searchParams = new URLSearchParams(nonNullState);
@@ -126,7 +136,7 @@ export function getGuildState() {
 	 * Pushes the current state to the browser history if it has changed
 	 */
 	async function pushState() {
-		let state: any = _getStateObject()
+		const state: UrlState = _getStateObject()
 		let previousState = window.history.state
 		if (isObjectEqual(state, previousState)) {
 			console.log("router - no changes detected")
@@ -144,7 +154,7 @@ export function getGuildState() {
 	 * Call this after initial app load to set the initial state
 	 */
 	async function replaceState() {
-		const state: any = _getStateObject()
+		const state: UrlState = _getStateObject()
 		const getParams = stateToParams(state)
 		window.history.replaceState(state, "", `/?${getParams}`)
 		// セッション状態を localStorage に保存
@@ -189,7 +199,7 @@ export function getGuildState() {
 	}
 
 
-	async function changeThreadId(newThreadId: string | null, newThreadMessageId: string | null) {
+	async function changeThreadId(newThreadId: string | null, newThreadMessageId: string | null = null) {
 		if (threadId === newThreadId && threadMessageId === newThreadMessageId) {
 			return;
 		}
@@ -307,7 +317,7 @@ export function channelOrThreadIdToName(channelId: string) {
 }
 
 
-async function restoreGuildState(state) {
+async function restoreGuildState(state: UrlState) {
 	await guildState.changeGuildId(state.guild);
 	await guildState.changeChannelId(state.channel, state.channelmessage);
 	await guildState.changeThreadId(state.thread, state.threadmessage);
@@ -356,7 +366,7 @@ if (!hasUrlParams) {
 			const scrollMsgId = getScrollMessageId(savedSession.thread);
 			if (scrollMsgId) savedSession.threadmessage = scrollMsgId;
 		}
-		urlState = savedSession;
+		urlState = { ...savedSession };
 	}
 } else {
 	// URLパラメータが存在する場合でも、特殊値の場合はlocalStorageから補完する

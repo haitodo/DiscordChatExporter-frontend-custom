@@ -60,10 +60,15 @@
                 {:else if message.type == "ChannelIconChange"}
                     <span class="system-message-text">changed the channel icon.</span>
                 {:else if message.type == "ChannelPinnedMessage"}
-                    {#if message?.reference?.messageId}
-                        <span class="system-message-text">pinned <span class="link" on:click={()=>changeMessageId(message.reference.channelId, message.reference.messageId)}>a message</span> to this channel. See all <span class="link" on:click={isChannel(message.reference.channelId) ? layoutState.toggleChannelPinned : layoutState.toggleThreadPinned}>pinned messages</span>.</span>
+                    {#if message.reference}
+                        {@const reference = message.reference}
+                        {#if reference.messageId}
+                        <span class="system-message-text">pinned <span class="link" on:click={()=>changeMessageId(reference.channelId, reference.messageId)}>a message</span> to this channel. See all <span class="link" on:click={isChannel(reference.channelId) ? layoutState.toggleChannelPinned : layoutState.toggleThreadPinned}>pinned messages</span>.</span>
+                        {:else}
+                        <span class="system-message-text">pinned a message to this channel. See all pinned messages.</span>
+                        {/if}
                     {:else}
-                        <span class="system-message-text">pinned a message to this channel. See all <span class="link" on:click={isChannel(message.reference.channelId) ? layoutState.toggleChannelPinned : layoutState.toggleThreadPinned}>pinned messages</span>.</span>
+                        <span class="system-message-text">pinned a message to this channel. See all pinned messages.</span>
                     {/if}
                 {:else if message.type == "ThreadCreated"}
                     {#if thread}

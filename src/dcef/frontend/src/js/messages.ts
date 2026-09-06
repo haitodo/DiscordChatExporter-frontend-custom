@@ -11,7 +11,7 @@ let messageCache: MessageCache = {};
 let messageCacheWithoutReference: MessageCache = {};
 
 
-async function _fetchMessagesFromApi(guildId: string | null, messageIds: string[]) {
+async function _fetchMessagesFromApi(guildId: string | null, messageIds: string[]): Promise<Message[]> {
     /**
      * Fetch messages from the API that are not already loaded in the cache
      */
@@ -38,13 +38,15 @@ async function _fetchMessagesFromApi(guildId: string | null, messageIds: string[
                 message_ids: notInCache
             })
         })
-        const messages_resp = await response.json()
+		const messages_resp = await response.json() as Message[];
         for (const message of messages_resp) {
             messageCacheWithoutReference[message._id] = message;
         }
     }
 
-    return messageIds.map((messageId) => messageCacheWithoutReference[messageId]);
+	return messageIds
+		.map((messageId) => messageCacheWithoutReference[messageId])
+		.filter((message): message is Message => message !== undefined);
 }
 
 
@@ -82,7 +84,7 @@ export async function messsageIdsToMessages(guildId: string, messageIds: string[
     for (const message of nonReferenceMessages) {
         let messageCopy = JSON.parse(JSON.stringify(message));
         if (messageCopy.reference && messageCopy.reference.messageId) {
-            messageCopy.referencedMessage = messageCacheWithoutReference[message.reference.messageId];
+			messageCopy.referencedMessage = messageCacheWithoutReference[messageCopy.reference.messageId];
         }
         outMessages.push(messageCopy);
     }

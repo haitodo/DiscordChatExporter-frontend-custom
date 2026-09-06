@@ -1,4 +1,4 @@
-import { derived, writable } from "svelte/store";
+import { derived, writable, type Writable } from "svelte/store";
 
 export const nameRenderer = writable("nickname");
 export const startingDayOfTheWeek = writable(0);
@@ -36,22 +36,24 @@ export const mainThreadFontSize = writable(16);
 export const replyThreadFontSize = writable(16);
 export const jumpToMessageAnimated = writable(false);
 
-function withLocalStorage(store, localstorageKey: string, type = "string") {
+type PersistedValue = string | number | boolean;
+
+function withLocalStorage<T extends PersistedValue>(store: Writable<T>, localstorageKey: string, type = "string"): void {
     const restoredValue = localStorage.getItem(localstorageKey);
     if (restoredValue) {
         if (type === "int") {
-            store.set(parseInt(restoredValue));
+            store.set(parseInt(restoredValue, 10) as T);
         }
         else if (type === "bool") {
-            store.set(restoredValue === "true");
+            store.set((restoredValue === "true") as T);
         }
         else {
-            store.set(restoredValue);
+            store.set(restoredValue as T);
         }
         console.log("settingsStore - restored", localstorageKey, "from local storage", restoredValue);
     }
     store.subscribe((value) => {
-        localStorage.setItem(localstorageKey, value);
+        localStorage.setItem(localstorageKey, String(value));
     });
 }
 

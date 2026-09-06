@@ -5,7 +5,7 @@
 </script>
 
 <div class="user-switcher" on:click>
-    <img src={photo} alt="" on:error={e => e.target.src = '/favicon.png'} />
+    <img src={photo} alt="" on:error={(e) => ((e.currentTarget as HTMLImageElement).src = '/favicon.png')} />
     <div>
         <div class="user-switcher-name1">{name1}</div>
         <div class="user-switcher-name2">{name2}</div>

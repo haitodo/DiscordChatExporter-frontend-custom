@@ -4,13 +4,14 @@
 
 	function removeSpoiler(e: MouseEvent) {
 		// handle spoilers globally in containers
-		if (e.target && e.target.matches(".d-spoiler")) {
-			e.target.classList.remove("d-spoiler");
-			e.target.classList.add("d-spoiler-revealed");
+		const target = e.target instanceof Element ? e.target : null;
+		if (target?.matches(".d-spoiler")) {
+			target.classList.remove("d-spoiler");
+			target.classList.add("d-spoiler-revealed");
 		}
-		if (e.target && e.target.matches(".media-spoiler")) {
-			e.target.classList.remove("media-spoiler");
-			e.target.classList.add("media-spoiler-revealed");
+		if (target?.matches(".media-spoiler")) {
+			target.classList.remove("media-spoiler");
+			target.classList.add("media-spoiler-revealed");
 		}
 	}
 

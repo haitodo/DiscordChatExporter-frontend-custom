@@ -1,7 +1,7 @@
-import type { Message } from "./interfaces";
+import type { Asset, Message } from "./interfaces";
 import { snowflakeToDate } from "./time";
 
-export function checkUrl(asset) {
+export function checkUrl(asset: Pick<Asset, "path"> | null | undefined): string {
 	if (!asset)
 		return "";
 	const url = asset.path;
@@ -14,7 +14,7 @@ export function checkUrl(asset) {
 }
 
 
-function fallbackCopyTextToClipboard(text) {
+function fallbackCopyTextToClipboard(text: string): void {
     var textArea = document.createElement("textarea");
     textArea.value = text;
 
@@ -37,13 +37,14 @@ function fallbackCopyTextToClipboard(text) {
 
     document.body.removeChild(textArea);
 }
-export function copyTextToClipboard(text) {
+export function copyTextToClipboard(text: string | number | bigint): void {
+    const textValue = String(text);
     if (!navigator.clipboard) {
-        fallbackCopyTextToClipboard(text);
+        fallbackCopyTextToClipboard(textValue);
         return;
     }
-    navigator.clipboard.writeText(text).then(function () {
-        console.log('Async: Copying to clipboard was successful! Copied text: ' + text);
+    navigator.clipboard.writeText(textValue).then(function () {
+        console.log('Async: Copying to clipboard was successful! Copied text: ' + textValue);
     }, function (err) {
         console.error('Async: Could not copy text: ', err);
     });
