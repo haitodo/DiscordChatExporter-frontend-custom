@@ -1,5 +1,10 @@
 # global denylist
 .DS_Store
+.DS_Store?
+._*
+Thumbs.db
+ehthumbs.db
+[Dd]esktop.ini
 node_modules
 .env
 .env.*
@@ -7,8 +12,27 @@ node_modules
 .vercel
 .output
 __pycache__
+*.py[cod]
+*$py.class
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
 .vscode
+.idea
 .venv
+venv/
+env/
+*.log
+
+# Vite / Frontend build artifacts & cache
+*.timestamp-*.mjs
+*.timestamp-*.js
+vite.config.*.timestamp*
+dist
+dist-ssr
+*.local
+.svelte-kit/
+*.tsbuildinfo
 
 
 # releases (built files)
