@@ -6,6 +6,9 @@ let bookmarksList = $state<Bookmark[]>([]);
 let checkpointsMap = $state<Record<string, Checkpoint>>({});
 let completedChannelsMap = $state<Record<string, CompletedChannel>>({});
 
+let bookmarkKeysSet = $derived(new Set(bookmarksList.map(b => `${b.guild_id}_${b.message_id}`)));
+let bookmarkMap = $derived(new Map(bookmarksList.map(b => [`${b.guild_id}_${b.message_id}`, b])));
+
 function entityKey(guildId: string, channelId: string): string {
     return `${guildId}_${channelId}`;
 }
@@ -134,32 +137,30 @@ export async function unmarkChannelCompleted(guildId: string, channelId: string)
     }, fetchCompletedChannels, "Failed to unmark channel completed");
 }
 
+const bookmarkStoreInstance = {
+    get bookmarks(): Bookmark[] {
+        return bookmarksList;
+    },
+    get checkpoints(): Record<string, Checkpoint> {
+        return checkpointsMap;
+    },
+    get completedChannels(): Record<string, CompletedChannel> {
+        return completedChannelsMap;
+    },
+    isBookmarked(guildId: string, messageId: string): boolean {
+        return bookmarkKeysSet.has(`${guildId}_${messageId}`);
+    },
+    getBookmark(guildId: string, messageId: string): Bookmark | undefined {
+        return bookmarkMap.get(`${guildId}_${messageId}`);
+    },
+    getCheckpoint(guildId: string, channelId: string): Checkpoint | undefined {
+        return checkpointsMap[entityKey(guildId, channelId)];
+    },
+    isCompleted(guildId: string, channelId: string): boolean {
+        return completedChannelsMap[entityKey(guildId, channelId)] !== undefined;
+    },
+};
+
 export function getBookmarksStore() {
-    return {
-        get bookmarks(): Bookmark[] {
-            return bookmarksList;
-        },
-        get checkpoints(): Record<string, Checkpoint> {
-            return checkpointsMap;
-        },
-        get completedChannels(): Record<string, CompletedChannel> {
-            return completedChannelsMap;
-        },
-        isBookmarked(guildId: string, messageId: string): boolean {
-            return bookmarksList.some(bookmark =>
-                bookmark.guild_id === guildId && bookmark.message_id === messageId
-            );
-        },
-        getBookmark(guildId: string, messageId: string): Bookmark | undefined {
-            return bookmarksList.find(bookmark =>
-                bookmark.guild_id === guildId && bookmark.message_id === messageId
-            );
-        },
-        getCheckpoint(guildId: string, channelId: string): Checkpoint | undefined {
-            return checkpointsMap[entityKey(guildId, channelId)];
-        },
-        isCompleted(guildId: string, channelId: string): boolean {
-            return completedChannelsMap[entityKey(guildId, channelId)] !== undefined;
-        },
-    };
+    return bookmarkStoreInstance;
 }

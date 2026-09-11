@@ -13,6 +13,9 @@ class FileFinder():
 	def __init__(self, directory: str):
 		self.base_directory = self.normalize_path(directory)
 
+	ATTACHMENT_REGEX = re.compile(r"-([a-fA-F0-9]{5})\.json$")
+	LOCAL_ASSET_REGEX = re.compile(r'.+(\-|\/)[a-fA-F0-9]{5}(?:\..+)?')
+
 	def find_channel_exports(self):
 		print("finding channel exports in " + self.base_directory)
 		directory = self.base_directory
@@ -20,7 +23,7 @@ class FileFinder():
 		for filename in glob.glob(directory + '**/*.json', recursive=True, include_hidden=True):
 			if filename.endswith('.json'):
 				# ignore attachment files - they are made by users, not DiscordChatExporter
-				if re.search(r"-([a-fA-F0-9]{5})\.json$", filename) != None:
+				if self.ATTACHMENT_REGEX.search(filename) is not None:
 					continue
 
 				# ignore channel_info.json and guild_info.json
@@ -32,7 +35,6 @@ class FileFinder():
 				filename_without_base_directory = self.remove_base_directory(filename)
 				files.append(filename_without_base_directory)
 
-
 		return files
 
 	def find_local_assets(self):
@@ -43,12 +45,12 @@ class FileFinder():
 		# valid file names
 		#  - `magic-1ED77.jpg`
 		#  - `D8ADB`
-		regex_pattern = re.compile(r'.+(\-|\/)[a-fA-F0-9]{5}(?:\..+)?')
-		for path in glob.glob(input_directory + '**/*', recursive=True, include_hidden=True):
-			path = path.replace('\\', '/')
-			if regex_pattern.match(path):
-				filename = os.path.basename(path)
-				all_files[filename] = path
+		for root, _, files in os.walk(input_directory):
+			root_normalized = root.replace('\\', '/')
+			for filename in files:
+				path = f"{root_normalized}/{filename}"
+				if self.LOCAL_ASSET_REGEX.match(path):
+					all_files[filename] = path
 
 		return all_files
 
@@ -80,7 +82,7 @@ class FileFinder():
 		return self.base_directory + path
 
 	def normalize_path(self, path: str):
-		"""
+		r"""
 		replace all \ with /
 		"""
 		return path.replace("\\", "/")

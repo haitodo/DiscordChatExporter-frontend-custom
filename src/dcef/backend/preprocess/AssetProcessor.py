@@ -20,6 +20,7 @@ class AssetProcessor:
 		self.local_assets = None
 		self.fast_mode = False
 		self.cache = {}
+		self.hash_cache = {}
 
 	def set_guild_id(self, guild_id):
 		"""
@@ -27,6 +28,8 @@ class AssetProcessor:
 		"""
 		guild_collections = self.database.get_guild_collections(guild_id)
 		self.collection_assets = guild_collections["assets"]
+		self.cache.clear()
+		self.hash_cache.clear()
 
 
 	def set_fast_mode(self, fast_mode: bool):
@@ -198,8 +201,15 @@ class AssetProcessor:
 		is_remote = self.is_remote(normalized_filepath)
 		filename_with_hash = self.get_filename_with_hash(normalized_filepath, is_remote)
 
+		if filename_with_hash in self.hash_cache:
+			asset = self.hash_cache[filename_with_hash]
+			self.cache[original_filepath] = asset
+			return asset
+
 		cached_asset = self.get_cached_asset(filename_with_hash)
 		if cached_asset is not None:
+			self.cache[original_filepath] = cached_asset
+			self.hash_cache[filename_with_hash] = cached_asset
 			return cached_asset
 
 		remote_url = normalized_filepath if is_remote else None
@@ -241,4 +251,5 @@ class AssetProcessor:
 
 		self.insert_asset(asset)
 		self.cache[original_filepath] = asset
+		self.hash_cache[filename_with_hash] = asset
 		return asset

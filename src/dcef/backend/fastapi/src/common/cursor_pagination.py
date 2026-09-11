@@ -38,8 +38,6 @@ def cursor_pagination(collection_messages, query: dict, prev_page_cursor: str | 
 	limit = int(limit)
 	msgs = []
 
-	print("LIMIT", limit)
-
 	if "_id" in query:
 		msgs = list(collection_messages.find(query))
 		return {

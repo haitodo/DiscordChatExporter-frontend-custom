@@ -94,13 +94,9 @@ def remove_processed_jsons(database, jsons):
 	"""
 	removes jsons from the list that are already processed
 	"""
-	database_jsons = database.get_collection("jsons").find()
-	for database_json in database_jsons:
-		json_path = database_json["_id"]
-		if json_path in jsons:
-			jsons.remove(json_path)
-
-	return jsons
+	database_jsons = database.get_collection("jsons").find({}, {"_id": 1})
+	processed_set = {database_json["_id"] for database_json in database_jsons}
+	return [json_path for json_path in jsons if json_path not in processed_set]
 
 
 def main(input_dir):
@@ -117,18 +113,18 @@ def main(input_dir):
 	jsons = remove_processed_jsons(database, all_exports)
 	jsons_count = len(jsons)
 	jsons_size = 0
-	invalid_jsons = []
+	invalid_jsons = set()
 	for json_path in jsons:
 		try:
 			jsons_size += os.path.getsize(file_finder.add_base_directory(json_path))
 		except FileNotFoundError:
 			print(f"Warning: file not found '{json_path}', DID YOU APPLY THE REGISTRY TWEAK AND RESTART to allow paths longer than 260 characters?")
-			invalid_jsons.append(json_path)
+			invalid_jsons.add(json_path)
 
-	for invalid_json in invalid_jsons:
-		jsons.remove(invalid_json)
-		if invalid_json in cache_files_list:
-			cache_files_list.remove(invalid_json)
+	if invalid_jsons:
+		jsons = [j for j in jsons if j not in invalid_jsons]
+		cache_files_list = [j for j in cache_files_list if j not in invalid_jsons]
+		jsons_count = len(jsons)
 
 	print(f"    found {jsons_count} new possible json channel exports")
 	print(f"    found {jsons_count_before - jsons_count} already processed json channel exports")

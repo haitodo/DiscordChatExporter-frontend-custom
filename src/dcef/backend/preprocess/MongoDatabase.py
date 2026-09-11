@@ -22,6 +22,7 @@ class MongoDatabase():
 			"jsons": self.database["jsons"],
 			"config": self.database["config"],
 		}
+		self._indexed_guilds = set()
 
 	def get_guild_collections(self, guild_id):
 		"""
@@ -42,9 +43,11 @@ class MongoDatabase():
 		}
 
 	def create_indexes(self, guild_id):
-		# create case insensitive text indexes
-		# self.col["messages"].create_index("content.content", default_language="none")
-		self.get_guild_collections(guild_id)["messages"].create_index("channelId", default_language="none")
+		padded_guild_id = Formatters.pad_id(guild_id)
+		if padded_guild_id in self._indexed_guilds:
+			return
+		self.get_guild_collections(padded_guild_id)["messages"].create_index("channelId", default_language="none")
+		self._indexed_guilds.add(padded_guild_id)
 
 
 

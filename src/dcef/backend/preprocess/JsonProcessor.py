@@ -1,5 +1,6 @@
 
 
+from collections import Counter
 import copy
 import functools
 import hashlib
@@ -30,6 +31,7 @@ class JsonProcessor:
 		self.asset_processor = asset_processor
 		self.index = index
 		self.total = total
+		self.known_authors = {}
 
 	def process_guild(self, guild):
 		guild["_id"] = Formatters.pad_id(guild.pop("id"))
@@ -147,8 +149,11 @@ class JsonProcessor:
 					if "images" in embed:
 						# deduplicate embed.images by url, unique value is image url
 						unique_images = []
+						seen_image_urls = set()
 						for image in embed["images"]:
-							if image["url"] not in [x["url"] for x in unique_images]:
+							img_url = image.get("url")
+							if img_url not in seen_image_urls:
+								seen_image_urls.add(img_url)
 								unique_images.append(image)
 						embed["images"] = unique_images
 
@@ -224,37 +229,38 @@ class JsonProcessor:
 		authors = {}
 
 		for message in messages:
-			author_copy = copy.deepcopy(message["author"])
-			if "author" in message:
+			if "author" not in message:
+				continue
 
-				# process avatar in message
-				author = message["author"]
+			author = message["author"]
+			author_id = author["_id"]
+
+			# process avatar in message
+			if "avatarUrl" in author:
 				author["avatar"] = self.asset_processor.process(author.pop("avatarUrl"), is_searchable=False)
-				message["author"] = author
 
+			nickname = author.get("nickname")
 
-				# extract all authors for search
-				if author_copy["_id"] in authors:
-					# save new nickname if different. Ignore null nicknames (discordless exports)
-					if message["author"]["nickname"] not in authors[author_copy["_id"]]["nicknames"] and message["author"]["nickname"] != None:
-						authors[author["_id"]]["nicknames"].append(message["author"]["nickname"])
-					continue
+			# extract all authors for search
+			if author_id in authors:
+				# save new nickname if different. Ignore null nicknames (discordless exports)
+				if nickname is not None and nickname not in authors[author_id]["nicknames"]:
+					authors[author_id]["nicknames"].append(nickname)
+				continue
 
-				author_copy["guildIds"] = [guild_id]
-				author_copy["avatar"] = self.asset_processor.process(author_copy.pop("avatarUrl"), is_searchable=False)
-				author_copy["names"] = [author_copy.pop("name") + "#" + author_copy.pop("discriminator")]
-				authors[author_copy["_id"]] = author_copy  # new author
+			# new author: create a shallow copy without heavy deepcopy
+			author_copy = dict(author)
+			author_copy["guildIds"] = [guild_id]
+			author_copy["avatar"] = author.get("avatar")
+			name = author_copy.pop("name", "")
+			disc = author_copy.pop("discriminator", "")
+			author_copy["names"] = [f"{name}#{disc}"]
+			author_copy.pop("avatarUrl", None)
+			nick = author_copy.pop("nickname", None)
+			author_copy["nicknames"] = [nick] if nick is not None else []
+			authors[author_id] = author_copy
 
-				author_copy["nicknames"] = [author_copy.pop("nickname")]
-				author_copy["nicknames"] = list(filter(None, author_copy["nicknames"]))   # remove null nicknames (discordless exports)
-
-		# dictionary to list
-		authors_list = []
-		for author_id in authors:
-			author_copy = authors[author_id]
-			authors_list.append(author_copy)
-
-		return authors_list
+		return list(authors.values())
 
 	def process_emojis(self, messages: list) -> list:
 		"""
@@ -342,12 +348,24 @@ class JsonProcessor:
 
 
 	def insert_author(self, author):
-		existing_author = self.collections["authors"].find_one({"_id": author["_id"]})
+		author_id = author["_id"]
+		incoming_guilds = set(author.get("guildIds", []))
+		incoming_nicknames = set(author.get("nicknames", []))
+		incoming_names = set(author.get("names", []))
+
+		known = self.known_authors.get(author_id)
+		if known is not None:
+			known_guilds, known_nicknames, known_names = known
+			if incoming_guilds.issubset(known_guilds) and incoming_nicknames.issubset(known_nicknames) and incoming_names.issubset(known_names):
+				return
+
+		existing_author = self.collections["authors"].find_one({"_id": author_id})
 
 		if existing_author == None:
 			# author doesn't exist yet
 			author["msg_count"] = 0
 			self.collections["authors"].insert_one(author)
+			self.known_authors[author_id] = (incoming_guilds, incoming_nicknames, incoming_names)
 			return
 
 		# merge new author with existing author
@@ -363,7 +381,7 @@ class JsonProcessor:
 				"names": names
 			}
 		})
-		return
+		self.known_authors[author_id] = (set(guildIds), set(nicknames), set(names))
 
 
 	def insert_emoji(self, emoji, guild_id):
@@ -560,7 +578,8 @@ class JsonProcessor:
 					# print('            existing messages count:', len(list(existing_messages)))
 
 					# print('        removing existing messages')
-					self.collections["messages"].delete_many({"_id": {"$in": message_ids}})
+					if len(existing_messages) > 0:
+						self.collections["messages"].delete_many({"_id": {"$in": message_ids}})
 
 					# print('        merging messages')
 					messages = self.merge_messages(list(messages), list(existing_messages))
@@ -570,19 +589,25 @@ class JsonProcessor:
 					self.collections["messages"].insert_many(messages)
 
 					# print('        updating message counts')
-					new_messages_count = len(messages) - len(list(existing_messages))
+					new_messages_count = len(messages) - len(existing_messages)
 					# update message count of channel
 					self.collections["channels"].update_one({"_id": message["channelId"]}, {"$inc": {"msg_count": new_messages_count}})
 
 					# update message count of guild
 					self.collections["guilds"].update_one({"_id": message["guildId"]}, {"$inc": {"msg_count": new_messages_count}})
 
-					# update message count of author
-					bulk = []
+					# update message count of author (aggregated with Counter to reduce bulk operations)
+					author_deltas = Counter()
 					for existing_message in existing_messages:
-						bulk.append(UpdateOne({"_id": existing_message["author"]["_id"]}, {"$inc": {"msg_count": -1}}))
+						author_deltas[existing_message["author"]["_id"]] -= 1
 					for message in messages:
-						bulk.append(UpdateOne({"_id": message["author"]["_id"]}, {"$inc": {"msg_count": 1}}))
+						author_deltas[message["author"]["_id"]] += 1
+
+					bulk = [
+						UpdateOne({"_id": a_id}, {"$inc": {"msg_count": delta}})
+						for a_id, delta in author_deltas.items()
+						if delta != 0
+					]
 					if len(bulk) > 0:
 						self.collections["authors"].bulk_write(bulk)
 
@@ -604,7 +629,8 @@ class JsonProcessor:
 		deleted_messages_ids = find_additional_missing_numbers(old_channel_ids_by_source, new_channel_ids)
 		# print(f'        found {len(deleted_messages_ids)} new deleted messages')
 		# print('    deleted messages - stage 3/3')
-		self.collections["messages"].update_many({"_id": {"$in": list(deleted_messages_ids)}}, {"$set": {"isDeleted": True}})
+		if len(deleted_messages_ids) > 0:
+			self.collections["messages"].update_many({"_id": {"$in": list(deleted_messages_ids)}}, {"$set": {"isDeleted": True}})
 
 
 		self.mark_as_processed(self.json_path)

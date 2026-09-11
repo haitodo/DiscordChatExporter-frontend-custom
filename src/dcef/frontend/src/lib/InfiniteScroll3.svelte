@@ -43,9 +43,21 @@
             return;
         }
         const containerRect = scrollContainer.getBoundingClientRect();
+        const centerX = containerRect.left + containerRect.width / 2;
         const centerY = containerRect.top + containerRect.height / 2;
 
-        // ビューポート中央に最も近いメッセージを探す
+        // elementFromPoint で中央要素を O(1) で直接取得（レイアウトスラッシング回避）
+        const hit = document.elementFromPoint(centerX, centerY);
+        const hitMessageEl = hit?.closest?.('[data-messageid]') as HTMLElement | null;
+        if (hitMessageEl && scrollContainer.contains(hitMessageEl)) {
+            const msgId = hitMessageEl.dataset.messageid;
+            if (msgId && msgId !== 'first' && msgId !== 'last') {
+                saveScrollMessageId(channelOrThreadId, msgId);
+                return;
+            }
+        }
+
+        // フォールバック: ビューポート中央に最も近いメッセージを探す
         const messageElements = scrollContainer.querySelectorAll('[data-messageid]');
         let closestId: string | null = null;
         let closestDistance = Infinity;

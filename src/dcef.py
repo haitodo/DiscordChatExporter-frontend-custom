@@ -318,6 +318,8 @@ def show_console():
 
 
 
+ATTACHMENT_FILE_REGEX = re.compile(r"-([a-fA-F0-9]{5})\.json$")
+
 def get_exports_state(exports_dir):
 	state = {}
 	if not os.path.exists(exports_dir):
@@ -328,7 +330,7 @@ def get_exports_state(exports_dir):
 			if file.endswith('.json'):
 				if file.endswith('channel_info.json') or file.endswith('guild_info.json'):
 					continue
-				if re.search(r"-([a-fA-F0-9]{5})\.json$", file) is not None:
+				if ATTACHMENT_FILE_REGEX.search(file) is not None:
 					continue
 				
 				full_path = os.path.join(root, file)

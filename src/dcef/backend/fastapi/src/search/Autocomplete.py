@@ -52,13 +52,13 @@ def autocomplete_categories(guild_id: str, partial_category: str, limit: int):
 			}
 		},
 		{
-			"$limit": limit
-		},
-		{
 			"$sort": {
 				"total_msg_count": -1,
 				"category": 1
 			}
+		},
+		{
+			"$limit": limit
 		}
 	])
 
@@ -165,8 +165,8 @@ def autocomplete_filenames(guild_id: str, partial_filename: str, limit: int):
 				"doc": { "$first": "$$ROOT" }
 			}
 		},
-		{"$limit": limit},
-		{"$sort": {"_id": 1}}
+		{"$sort": {"_id": 1}},
+		{"$limit": limit}
 	])
 
 
@@ -204,8 +204,8 @@ def autocomplete_extensions(guild_id: str, partial_extension: str, limit: int):
 				"count": { "$sum": 1 }
 			}
 		},
-		{"$limit": limit},
-		{"$sort": {"count": pymongo.DESCENDING}}
+		{"$sort": {"count": pymongo.DESCENDING}},
+		{"$limit": limit}
 	])
 
 	extensions = []
@@ -230,7 +230,6 @@ def autocomplete_users(guild_id: str, partial_user_name: str, limit: int):
 	collection_authors = Database.get_guild_collection(guild_id, "authors")
 	partial_user_name = _safe_partial(partial_user_name)
 	limit = _safe_limit(limit)
-	print("collection_authors", collection_authors)
 
 	denylisted_user_ids = Database.get_denylisted_user_ids()
 

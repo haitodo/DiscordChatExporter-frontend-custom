@@ -56,7 +56,9 @@ function getCursorParameter(direction: PageDirection, messageId: string | null):
 function buildUrl(endpoint: string, params: QueryParams): string {
     const query = new URLSearchParams();
     for (const [key, value] of Object.entries(params)) {
-        query.set(key, String(value));
+        if (value !== null && value !== undefined && value !== "") {
+            query.set(key, String(value));
+        }
     }
     const queryString = query.toString();
     return queryString ? `${endpoint}?${queryString}` : endpoint;
@@ -179,37 +181,45 @@ function isThread(channel: Channel): boolean {
 
 /** Builds the menu hierarchy from the flat channel response returned by the API. */
 export function groupChannelsIntoCategories(channels: Channel[], guildId: string): Category[] {
-    const channelsWithThreads: ChannelWithThreads[] = channels
-        .filter(channel => !isThread(channel))
-        .map(channel => ({
-            ...channel,
-            categoryId: guildId === DEFAULT_GUILD_ID ? "0" : channel.categoryId,
-            threads: [],
-        }));
-    const categories: Category[] = guildId === DEFAULT_GUILD_ID
+    const isDirectMessages = guildId === DEFAULT_GUILD_ID;
+    const categories: Category[] = isDirectMessages
         ? [{ _id: "0", name: "Direct Messages", channels: [], msg_count: 0 }]
         : [];
     const categoryById = new Map(categories.map(category => [category._id, category]));
-    const channelById = new Map(channelsWithThreads.map(channel => [channel._id, channel]));
+    const channelById = new Map<string, ChannelWithThreads>();
+    const threads: Channel[] = [];
 
-    for (const channel of channelsWithThreads) {
-        let category = categoryById.get(channel.categoryId);
-        if (!category) {
-            category = {
-                _id: channel.categoryId,
-                name: channel.category,
-                channels: [],
-                msg_count: 0,
+    // Single-pass classification of channels and threads
+    for (const channel of channels) {
+        if (isThread(channel)) {
+            threads.push(channel);
+        } else {
+            const categoryId = isDirectMessages ? "0" : channel.categoryId;
+            const channelWithThreads: ChannelWithThreads = {
+                ...channel,
+                categoryId,
+                threads: [],
             };
-            categories.push(category);
-            categoryById.set(category._id, category);
+            channelById.set(channel._id, channelWithThreads);
+
+            let category = categoryById.get(categoryId);
+            if (!category) {
+                category = {
+                    _id: categoryId,
+                    name: channel.category,
+                    channels: [],
+                    msg_count: 0,
+                };
+                categories.push(category);
+                categoryById.set(categoryId, category);
+            }
+            category.channels.push(channelWithThreads);
+            category.msg_count += channel.msg_count;
         }
-        category.channels.push(channel);
-        category.msg_count += channel.msg_count;
     }
 
     const lostThreads: Channel[] = [];
-    for (const thread of channels.filter(isThread)) {
+    for (const thread of threads) {
         const parent = channelById.get(thread.categoryId);
         if (!parent) {
             lostThreads.push(thread);
