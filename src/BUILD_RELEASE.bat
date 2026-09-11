@@ -29,8 +29,8 @@ mkdir "_temp"
 
 @REM install windows-runner dependencies
 if not exist "_temp\dcef\venv" (
-    call py -m venv _temp\dcef\venv
-    call "_temp\dcef\venv\Scripts\python.exe" -m pip install -r requirements.txt
+    call uv venv _temp\dcef\venv --python 3.11
+    call uv pip install --python "_temp\dcef\venv\Scripts\python.exe" -r requirements.lock
 )
 @REM Build windows-runner
 call "_temp\dcef\venv\Scripts\python.exe" -m PyInstaller --onefile --noconsole --name dcef       --icon "../../icon.ico"  --distpath "_temp/dcef/"       --specpath "_temp/dcef/"       --workpath "_temp/dcef/"       ./dcef.py
@@ -41,8 +41,8 @@ move "_temp\dcef\dcef.exe" "..\release\dcef.exe"
 
 @REM install preprocess dependencies
 if not exist "_temp\preprocess\venv" (
-    call py -m venv _temp\preprocess\venv
-    call "_temp\preprocess\venv\Scripts\python.exe" -m pip install -r dcef\backend\preprocess\requirements.txt
+    call uv venv _temp\preprocess\venv --python 3.11
+    call uv pip install --python "_temp\preprocess\venv\Scripts\python.exe" -r dcef\backend\preprocess\requirements.lock
 )
 @REM Build preprocess
 call "_temp\preprocess\venv\Scripts\python.exe" -m PyInstaller --onefile --name preprocess --icon "../../icon.ico"  --distpath "_temp/preprocess/" --specpath "_temp/preprocess/" --workpath "_temp/preprocess/" ./dcef/backend/preprocess/main_mongo.py
@@ -55,8 +55,8 @@ copy "dcef\backend\preprocess\schema_version.json" "..\release\dcef\backend\prep
 
 @REM install api-backend dependencies
 if not exist "_temp\fastapi\venv" (
-    call py -m venv _temp\fastapi\venv
-    call "_temp\fastapi\venv\Scripts\python.exe" -m pip install -r dcef\backend\fastapi\requirements.txt
+    call uv venv _temp\fastapi\venv --python 3.11
+    call uv pip install --python "_temp\fastapi\venv\Scripts\python.exe" -r dcef\backend\fastapi\requirements.lock
 )
 @REM build api-backend
 call "_temp\fastapi\venv\Scripts\python.exe" -m PyInstaller --onefile --name fastapi    --icon "../../icon.ico"  --distpath "_temp/fastapi/"    --specpath "_temp/fastapi/"    --workpath "_temp/fastapi/"    ./dcef/backend/fastapi/prod.py           -F --hidden-import "uvicorn.logging" --hidden-import "uvicorn.loops" --hidden-import "uvicorn.loops.auto" --hidden-import "uvicorn.protocols" --hidden-import "uvicorn.protocols.http" --hidden-import "uvicorn.protocols.http.auto" --hidden-import "uvicorn.protocols.websockets" --hidden-import "uvicorn.protocols.websockets.auto" --hidden-import "uvicorn.lifespan" --hidden-import "uvicorn.lifespan.on" --hidden-import "src.main"
@@ -74,10 +74,10 @@ cd dcef\frontend
 
 @REM install static-frontend dependencies
 if not exist "node_modules" (
-    call npm install
+    call pnpm install --frozen-lockfile
 )
-@REM @REM build static-frontend
-call npm run build
+@REM build static-frontend
+call pnpm build
 cd ..\..
 rmdir "..\release\dcef\frontend\" /s /q
 move "_temp\frontend" "..\release\dcef\frontend"

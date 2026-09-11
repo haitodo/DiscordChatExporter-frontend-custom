@@ -19,12 +19,19 @@ jobs:
         with:
           python-version: '3.11.0'
 
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v5
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 12
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 18.17.1
-          cache: 'npm'
-          cache-dependency-path: 'src/dcef/frontend/package-lock.json'
+          cache: 'pnpm'
+          cache-dependency-path: 'src/dcef/frontend/pnpm-lock.yaml'
 
       - name: Run build script
         working-directory: src

@@ -1,0 +1,32 @@
+[project]
+name = "discord-chat-exporter-frontend-custom"
+version = "0.1.0"
+description = "Custom frontend and processing backend for DiscordChatExporter"
+requires-python = ">=3.11"
+
+[project.optional-dependencies]
+runner = [
+    "pywebview==4.0.1",
+    "pywin32==306",
+    "psutil==5.9.4",
+    "pyinstaller==6.10.0"
+]
+fastapi = [
+    "fastapi[all]==0.112.0",
+    "pymongo==4.3.3",
+    "python-dateutil==2.8.2",
+    "uvicorn==0.30.5",
+    "pyinstaller==6.10.0"
+]
+preprocess = [
+    "imagesize==1.4.1",
+    "requests==2.26.0",
+    "pymongo==4.3.3",
+    "colorthief==0.2.1",
+    "ijson==3.2.3",
+    "pyinstaller==6.10.0"
+]
+configurator = [
+    "pymongo==4.3.3",
+    "pyinstaller==6.10.0"
+]
