@@ -1,6 +1,6 @@
 <script lang="ts">
     import { isDateDifferent } from '../../js/helpers';
-    import { fetchSearch, fetchSearchCount } from '../../js/stores/api';
+    import { fetchSearch, fetchSearchCount, type PageDirection } from '../../js/stores/api';
     import { findChannel, findThread, getGuildState, isChannel } from '../../js/stores/guildState.svelte';
     import { getLayoutState } from '../../js/stores/layoutState.svelte';
     import DateSeparator from '../DateSeparator.svelte';
@@ -21,7 +21,7 @@
         return count.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
     }
 
-    async function fetchMessagesWrapper(direction: "before" | "after" | "around" | "first" | "last", messageId: string | null = null, limit: number) {
+    async function fetchMessagesWrapper(direction: PageDirection, messageId: string | null = null, limit: number) {
         return fetchSearch(apiGuildId, searchState.searchPrompt, direction, messageId, limit)
     }
 </script>

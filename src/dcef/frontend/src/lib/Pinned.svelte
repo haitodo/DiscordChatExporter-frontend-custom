@@ -1,6 +1,6 @@
 <script lang="ts">
     import { isDateDifferent } from "../js/helpers";
-    import { fetchPinnedMessages } from "../js/stores/api";
+    import { fetchPinnedMessages, type PageDirection } from "../js/stores/api";
     import { getGuildState } from "../js/stores/guildState.svelte";
     import DateSeparator from "./DateSeparator.svelte";
     import InfiniteScroll3 from "./InfiniteScroll3.svelte";
@@ -15,7 +15,7 @@
     }
     let { channelId }: MyProps = $props();
 
-    async function fetchMessagesWrapper(direction: "before" | "after" | "around" | "first" | "last", messageId: string | null = null, limit: number) {
+    async function fetchMessagesWrapper(direction: PageDirection, messageId: string | null = null, limit: number) {
         return fetchPinnedMessages(apiGuildId, channelId, direction, messageId, limit)
     }
 </script>

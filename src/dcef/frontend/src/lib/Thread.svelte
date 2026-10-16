@@ -1,6 +1,6 @@
 <script lang="ts">
     import { isDateDifferent } from "../js/helpers";
-    import { fetchMessages } from "../js/stores/api";
+    import { fetchMessages, type PageDirection } from "../js/stores/api";
     import { getGuildState } from "../js/stores/guildState.svelte";
     import { getLayoutState } from "../js/stores/layoutState.svelte";
     import DateSeparator from "./DateSeparator.svelte";
@@ -24,7 +24,7 @@
     let apiGuildId = $derived(guildState.guildId ? guildState.guildId : "000000000000000000000000")
     let apiThreadId = $derived(guildState.threadId)
 
-    export async function fetchMessagesWrapper(direction: "before" | "after" | "around" | "first" | "last", messageId: string | null = null, limit: number) {
+    export async function fetchMessagesWrapper(direction: PageDirection, messageId: string | null = null, limit: number) {
         return fetchMessages(apiGuildId, apiThreadId, direction, messageId, limit)
     }
 </script>
