@@ -21,16 +21,9 @@
 </script>
 
 
-{#snippet renderMessageSnippet(index, message, previousMessage)}
-    <div class="pinned-message-wrapper" data-messageid={message._id}>
-        <Message message={message} previousMessage={previousMessage} showJump={true} mergeMessages={false} />
-    </div>
-{/snippet}
-
 {#snippet renderMessageSnippet2(message, previousMessage)}
     <div data-messageid={message._id}>
         {#if message._id === "first"}
-            <!-- <ChannelStart channelName={message.channelName} isThread={false} messageAuthor={message.author} /> -->
             <div>pinned start</div>
         {:else if message._id === "last"}
             <div>channel end</div>
@@ -43,16 +36,20 @@
     </div>
 {/snippet}
 
+{#snippet noPinsContent()}
+    <div class="no-pins-wrapper">
+        <Icon name="placeholder/no-pins" width={94} height={120} />
+        <div class="no-pins-msg">This channel doesn't have any pinned messages... yet.</div>
+    </div>
+    <div class="no-pins-footer">
+        <div class="footer-title">PROTIP:</div>
+        <div class="footer-subtitle">Users with ‘Manage Messages’ permission can pin a message from its context menu.</div>
+    </div>
+{/snippet}
+
 {#snippet emptySnippet()}
     <div class="channel-wrapper">
-        <div class="no-pins-wrapper">
-            <Icon name="placeholder/no-pins" width={94} height={120} />
-            <div class="no-pins-msg">This channel doesn't have any pinned messages... yet.</div>
-        </div>
-        <div class="no-pins-footer">
-            <div class="footer-title">PROTIP:</div>
-            <div class="footer-subtitle">Users with ‘Manage Messages’ permission can pin a message from its context menu.</div>
-        </div>
+        {@render noPinsContent()}
     </div>
 {/snippet}
 
@@ -61,14 +58,7 @@
         <div class="pinned-header">
             <div class="header-txt">Pinned Messages</div>
         </div>
-        <div class="no-pins-wrapper">
-            <Icon name="placeholder/no-pins" width={94} height={120} />
-            <div class="no-pins-msg">This channel doesn't have any pinned messages... yet.</div>
-        </div>
-        <div class="no-pins-footer">
-            <div class="footer-title">PROTIP:</div>
-            <div class="footer-subtitle">Users with ‘Manage Messages’ permission can pin a message from its context menu.</div>
-        </div>
+        {@render noPinsContent()}
     </div>
 {:else}
     <div class="channel-wrapper">
@@ -76,13 +66,6 @@
             <div class="header-txt">Pinned Messages</div>
         </div>
         <div class="channel" >
-            <!-- <InfiniteScroll
-            debugname="pinned"
-            ids={messageIds}
-            guildId={guildState.guildId}
-            selectedMessageId={messageIds[0]}
-            renderMessageSnippet={renderMessageSnippet}
-            bottomAligned={false} /> -->
             <InfiniteScroll3
                 fetchMessages={fetchMessagesWrapper}
                 scrollToMessageId={"last"}
@@ -177,14 +160,5 @@
             border-bottom-left-radius: 4px;
             border-bottom-right-radius: 4px;
         }
-    }
-
-
-    .pinned-message-wrapper {
-        border: 1px solid #1e1f22;
-        border-radius: 4px;
-        margin: 3px 8px 3px 8px;
-        padding-bottom: 17px;
-        background-color: #313338;
     }
 </style>
