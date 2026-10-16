@@ -2,16 +2,13 @@ import time
 import threading
 import pymongo
 
+from .helpers import pad_id
+
 URI = "mongodb://127.0.0.1:27017"
 client = pymongo.MongoClient(URI)
 db = client["dcef"]
 collection_guilds = db["guilds"]
 collection_config = db["config"]
-
-def pad_id(id):
-	if id == None:
-		return None
-	return str(id).zfill(24)
 
 # Lightweight thread-safe TTL cache for config values to avoid repeated sync DB queries
 _config_cache = {}

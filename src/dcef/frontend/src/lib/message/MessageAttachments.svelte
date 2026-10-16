@@ -12,14 +12,43 @@
     }
     let { attachments}: MyProps = $props();
 
+	const attachmentIcons = {
+		pdf: "filetype/pdf",
+		zip: "filetype/archive",
+		rar: "filetype/archive",
+		"7z": "filetype/archive",
+		xls: "filetype/spreadsheet",
+		xlsx: "filetype/spreadsheet",
+		ods: "filetype/spreadsheet",
+		ppt: "filetype/document",
+		pptx: "filetype/document",
+		doc: "filetype/document",
+		docx: "filetype/document",
+		mp3: "filetype/audio",
+		ogg: "filetype/audio",
+		wav: "filetype/audio",
+		m4a: "filetype/audio",
+		flac: "filetype/audio",
+	} as const;
+
+	const audioExtensions = Object.entries(attachmentIcons)
+		.filter(([, icon]) => icon === "filetype/audio")
+		.map(([extension]) => extension);
+
+	type AttachmentIcon = typeof attachmentIcons[keyof typeof attachmentIcons] | "filetype/unknown";
+
+	function getAttachmentIcon(extension: string): AttachmentIcon {
+		return Object.prototype.hasOwnProperty.call(attachmentIcons, extension)
+			? attachmentIcons[extension as keyof typeof attachmentIcons]
+			: "filetype/unknown";
+	}
+
 	function isImageAttachment(attachment: Asset): boolean {
 		return attachment.type === 'image' || (attachment.type === 'unknown' && !attachment.filenameWithoutHash.includes('.'));
 	}
 
 	let imageAttachments = $derived(attachments.filter(isImageAttachment));
 	let otherAttachments = $derived(attachments.filter(attachment => !isImageAttachment(attachment)));
-
-	const audioExtensions = ['mp3', 'ogg', 'wav', 'm4a', 'flac'];
 
 </script>
 
@@ -33,6 +62,7 @@
 <div class="attachment-container">
 	{#each otherAttachments as attachment}
 		{@const attachmentExtension: string = attachment?.filenameWithoutHash.toLowerCase().split('.').pop() ?? 'invalid-fileextension'}
+		{@const attachmentIcon = getAttachmentIcon(attachmentExtension)}
 		{#if attachment.type == 'video'}
 			<MessageVideo attachment={attachment} />
 		{:else if ['txt'].includes(attachmentExtension)}
@@ -40,19 +70,7 @@
 		{:else}
 			<div class="attachment-wrapper">
 				<div class="attachment" style="width: 100%;">
-					{#if ['pdf'].includes(attachmentExtension)}
-						<Icon name="filetype/pdf" width={24} height={32} />
-					{:else if ['zip', 'rar', '7z'].includes(attachmentExtension)}
-						<Icon name="filetype/archive" width={24} height={32} />
-					{:else if ['xls', 'xlsx', 'ods'].includes(attachmentExtension)}
-						<Icon name="filetype/spreadsheet" width={24} height={32} />
-					{:else if ['ppt', 'pptx', 'doc', 'docx'].includes(attachmentExtension)}
-						<Icon name="filetype/document" width={24} height={32} />
-					{:else if audioExtensions.includes(attachmentExtension)}
-						<Icon name="filetype/audio" width={24} height={32} />
-					{:else}
-						<Icon name="filetype/unknown" width={24} height={32} />
-					{/if}
+					<Icon name={attachmentIcon} width={24} height={32} />
 
 					<div>
 						<a class="attachment-filename" href={checkUrl(attachment)} target="_blank" rel="noreferrer">{attachment.filenameWithoutHash}</a>

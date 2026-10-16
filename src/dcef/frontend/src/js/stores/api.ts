@@ -64,38 +64,38 @@ function buildUrl(endpoint: string, params: QueryParams): string {
     return queryString ? `${endpoint}?${queryString}` : endpoint;
 }
 
-async function requestJson<T>(
+async function request<T>(
     endpoint: string,
     params: QueryParams,
     errorMessage: string,
+    readResponse: (response: Response) => Promise<T>,
 ): Promise<T | null> {
     try {
         const response = await fetch(buildUrl(endpoint, params));
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}`);
         }
-        return await response.json() as T;
+        return await readResponse(response);
     } catch (error) {
         console.error(errorMessage, error);
         return null;
     }
 }
 
-async function requestText(
+function requestJson<T>(
+    endpoint: string,
+    params: QueryParams,
+    errorMessage: string,
+): Promise<T | null> {
+    return request(endpoint, params, errorMessage, response => response.json() as Promise<T>);
+}
+
+function requestText(
     endpoint: string,
     params: QueryParams,
     errorMessage: string,
 ): Promise<string | null> {
-    try {
-        const response = await fetch(buildUrl(endpoint, params));
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
-        }
-        return await response.text();
-    } catch (error) {
-        console.error(errorMessage, error);
-        return null;
-    }
+    return request(endpoint, params, errorMessage, response => response.text());
 }
 
 export async function fetchMessages(

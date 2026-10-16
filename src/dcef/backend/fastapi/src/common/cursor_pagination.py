@@ -3,7 +3,7 @@ import re
 
 from src.common.enrich_messages import enrich_messages_with_referenced
 
-from ..common.Database import pad_id
+from ..common.helpers import pad_id
 
 
 def cursor_pagination(collection_messages, query: dict, prev_page_cursor: str | None = None, around_page_cursor: str | None = None, next_page_cursor: str | None = None, limit=100, guild_id=None):
