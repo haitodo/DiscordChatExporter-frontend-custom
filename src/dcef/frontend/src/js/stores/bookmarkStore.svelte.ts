@@ -6,7 +6,6 @@ let bookmarksList = $state<Bookmark[]>([]);
 let checkpointsMap = $state<Record<string, Checkpoint>>({});
 let completedChannelsMap = $state<Record<string, CompletedChannel>>({});
 
-let bookmarkKeysSet = $derived(new Set(bookmarksList.map(b => `${b.guild_id}_${b.message_id}`)));
 let bookmarkMap = $derived(new Map(bookmarksList.map(b => [`${b.guild_id}_${b.message_id}`, b])));
 
 function entityKey(guildId: string, channelId: string): string {
@@ -148,7 +147,7 @@ const bookmarkStoreInstance = {
         return completedChannelsMap;
     },
     isBookmarked(guildId: string, messageId: string): boolean {
-        return bookmarkKeysSet.has(`${guildId}_${messageId}`);
+        return bookmarkMap.has(`${guildId}_${messageId}`);
     },
     getBookmark(guildId: string, messageId: string): Bookmark | undefined {
         return bookmarkMap.get(`${guildId}_${messageId}`);
