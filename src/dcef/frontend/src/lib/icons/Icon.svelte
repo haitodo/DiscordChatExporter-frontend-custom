@@ -47,51 +47,59 @@
     import arrowUp from "./modal/arrowUp.svg?raw"
     import modalX from "./modal/x.svg?raw"
 
-    type IconOptions =  "player/pause" |
-                        "player/play" |
-                        "player/restart" |
-                        "player/volumeHigh" |
-                        "player/volumeLow" |
-                        "player/volumeMuted" |
-                        "player/openLink" |
-                        "filetype/archive" |
-                        "filetype/audio" |
-                        "filetype/document" |
-                        "filetype/pdf" |
-                        "filetype/spreadsheet" |
-                        "filetype/unknown" |
-                        "dcef/empty" |
-                        "dcef/filled" |
-                        "reply/attachment" |
-                        "reply/deleted" |
-                        "systemmessage/boost" |
-                        "systemmessage/join" |
-                        "systemmessage/leave" |
-                        "systemmessage/edit" |
-                        "systemmessage/call" |
-                        "systemmessage/pinned" |
-                        "channeltype/channel" |
-                        "channeltype/channelWithThreads" |
-                        "channeltype/news" |
-                        "channeltype/voice" |
-                        "channeltype/thread" |
-                        "placeholder/poop" |
-                        "placeholder/no-pins" |
-                        "placeholder/no-search-results" |
-                        "other/download" |
-                        "other/dropdown" |
-                        "other/hamburger" |
-                        "other/settings" |
-                        "other/shield" |
-                        "other/verified" |
-                        "other/magnifying-glass" |
-                        "other/help" |
-                        "other/bin" |
-                        "other/plus" |
-                        "other/bookmark" |
-                        "other/bookmark-filled" |
-                        "modal/arrowUp" |
-                        "modal/x"
+    const icons = {
+        "player/pause": playerPause,
+        "player/play": playerPlay,
+        "player/restart": playerRestart,
+        "player/volumeHigh": playerVolumeHigh,
+        "player/volumeLow": playerVolumeLow,
+        "player/volumeMuted": playerVolumeMuted,
+        "player/openLink": openLink,
+        "filetype/archive": filetypeArchive,
+        "filetype/audio": filetypeAudio,
+        "filetype/document": filetypeDocument,
+        "filetype/pdf": filetypePdf,
+        "filetype/spreadsheet": filetypeSpreadsheet,
+        "filetype/unknown": filetypeUnknown,
+        "dcef/empty": dcefEmpty,
+        "dcef/filled": dcefFilled,
+        "reply/attachment": replyAttachment,
+        "reply/deleted": replyDeleted,
+        "systemmessage/boost": systemMessageBoost,
+        "systemmessage/join": systemMessageJoin,
+        "systemmessage/leave": systemMessageLeave,
+        "systemmessage/edit": systemMessageEdit,
+        "systemmessage/call": call,
+        "systemmessage/pinned": pinned,
+        "channeltype/channel": channel,
+        "channeltype/channelWithThreads": channelWithThreads,
+        "channeltype/news": news,
+        "channeltype/voice": voice,
+        "channeltype/thread": thread,
+        "placeholder/poop": poop,
+        "placeholder/no-pins": noPins,
+        "placeholder/no-search-results": noSearchResults,
+        "other/download": download,
+        "other/dropdown": dropdown,
+        "other/hamburger": hamburger,
+        "other/settings": settings,
+        "other/shield": shield,
+        "other/verified": verified,
+        "other/magnifying-glass": magnifyingGlass,
+        "other/help": help,
+        "other/bin": bin,
+        "other/plus": plus,
+        "other/bookmark": bookmark,
+        "other/bookmark-filled": bookmarkFilled,
+        "modal/arrowUp": arrowUp,
+        "modal/x": modalX,
+    } as const;
+
+    type IconOptions = keyof typeof icons;
+
+    function getIcon(name: IconOptions): string | undefined {
+        return Object.prototype.hasOwnProperty.call(icons, name) ? icons[name] : undefined;
+    }
 
 	interface MyProps {
         name: IconOptions;
@@ -101,99 +109,12 @@
     }
     let { name, width, height: inputHeight, inline=false }: MyProps = $props();
     let height = $derived(inputHeight ? inputHeight : width);
+    let icon = $derived(getIcon(name));
 </script>
 
 <div class="icon" class:inline={inline} style="width: {width}px; height: {height}px;">
-    {#if name === "player/play"}
-        {@html playerPlay}
-    {:else if name === "player/pause"}
-        {@html playerPause}
-    {:else if name === "player/restart"}
-        {@html playerRestart}
-    {:else if name === "player/volumeHigh"}
-        {@html playerVolumeHigh}
-    {:else if name === "player/volumeLow"}
-        {@html playerVolumeLow}
-    {:else if name === "player/volumeMuted"}
-        {@html playerVolumeMuted}
-    {:else if name === "player/openLink"}
-        {@html openLink}
-    {:else if name === "filetype/archive"}
-        {@html filetypeArchive}
-    {:else if name === "filetype/audio"}
-        {@html filetypeAudio}
-    {:else if name === "filetype/document"}
-        {@html filetypeDocument}
-    {:else if name === "filetype/pdf"}
-        {@html filetypePdf}
-    {:else if name === "filetype/spreadsheet"}
-        {@html filetypeSpreadsheet}
-    {:else if name === "filetype/unknown"}
-        {@html filetypeUnknown}
-    {:else if name === "dcef/empty"}
-        {@html dcefEmpty}
-    {:else if name === "dcef/filled"}
-        {@html dcefFilled}
-    {:else if name === "reply/attachment"}
-        {@html replyAttachment}
-    {:else if name === "reply/deleted"}
-        {@html replyDeleted}
-    {:else if name === "systemmessage/boost"}
-        {@html systemMessageBoost}
-    {:else if name === "systemmessage/join"}
-        {@html systemMessageJoin}
-    {:else if name === "systemmessage/leave"}
-        {@html systemMessageLeave}
-    {:else if name === "systemmessage/edit"}
-        {@html systemMessageEdit}
-    {:else if name === "systemmessage/call"}
-        {@html call}
-    {:else if name === "systemmessage/pinned"}
-        {@html pinned}
-    {:else if name === "channeltype/channel"}
-        {@html channel}
-    {:else if name === "channeltype/channelWithThreads"}
-        {@html channelWithThreads}
-    {:else if name === "channeltype/news"}
-        {@html news}
-    {:else if name === "channeltype/voice"}
-        {@html voice}
-    {:else if name === "channeltype/thread"}
-        {@html thread}
-    {:else if name === "placeholder/poop"}
-        {@html poop}
-    {:else if name === "placeholder/no-pins"}
-        {@html noPins}
-    {:else if name === "placeholder/no-search-results"}
-        {@html noSearchResults}
-    {:else if name === "other/download"}
-        {@html download}
-    {:else if name === "other/dropdown"}
-        {@html dropdown}
-    {:else if name === "other/hamburger"}
-        {@html hamburger}
-    {:else if name === "other/settings"}
-        {@html settings}
-    {:else if name === "other/shield"}
-        {@html shield}
-    {:else if name === "other/verified"}
-        {@html verified}
-    {:else if name === "other/magnifying-glass"}
-        {@html magnifyingGlass}
-    {:else if name === "other/help"}
-        {@html help}
-    {:else if name === "other/bin"}
-        {@html bin}
-    {:else if name === "other/plus"}
-        {@html plus}
-    {:else if name === "other/bookmark"}
-        {@html bookmark}
-    {:else if name === "other/bookmark-filled"}
-        {@html bookmarkFilled}
-    {:else if name === "modal/arrowUp"}
-        {@html arrowUp}
-    {:else if name === "modal/x"}
-        {@html modalX}
+    {#if icon}
+        {@html icon}
     {:else}
         <div>Icon "{name}" not found</div>
     {/if}

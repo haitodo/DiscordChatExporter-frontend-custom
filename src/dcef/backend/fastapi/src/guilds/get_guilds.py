@@ -19,14 +19,9 @@ async def get_guilds():
 	collection_guilds = Database.get_global_collection("guilds")
 	allowlisted_guild_ids = Database.get_allowlisted_guild_ids()
 
-	if len(allowlisted_guild_ids) == 0:
-		cursor = collection_guilds.find().sort([("msg_count", pymongo.DESCENDING)])
-	else:
-		cursor = collection_guilds.find(
-			{
-				"_id": {
-					"$in": allowlisted_guild_ids
-				}
-			}
-		).sort([("msg_count", pymongo.DESCENDING)])
+	query = {}
+	if len(allowlisted_guild_ids) > 0:
+		query["_id"] = {"$in": allowlisted_guild_ids}
+
+	cursor = collection_guilds.find(query).sort([("msg_count", pymongo.DESCENDING)])
 	return list(cursor)

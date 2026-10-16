@@ -12,8 +12,12 @@
     }
     let { attachments}: MyProps = $props();
 
-	let imageAttachments = $derived(attachments.filter(a => a.type === 'image' || (a.type === 'unknown' && !a.filenameWithoutHash.includes('.'))));
-	let otherAttachments = $derived(attachments.filter(a => a.type !== 'image' && (a.type !== 'unknown' || a.filenameWithoutHash.includes('.'))));
+	function isImageAttachment(attachment: Asset): boolean {
+		return attachment.type === 'image' || (attachment.type === 'unknown' && !attachment.filenameWithoutHash.includes('.'));
+	}
+
+	let imageAttachments = $derived(attachments.filter(isImageAttachment));
+	let otherAttachments = $derived(attachments.filter(attachment => !isImageAttachment(attachment)));
 
 	const audioExtensions = ['mp3', 'ogg', 'wav', 'm4a', 'flac'];
 
